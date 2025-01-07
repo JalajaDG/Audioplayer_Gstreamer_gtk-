@@ -32,3 +32,11 @@ sudo apt install meson ninja-build
 //check for audio suport
 pulseaudio --version
 
+
+
+//now all pre-requisites done,,check with a sample "test_gst.c file"
+
+ $gcc -o test test_gst.c -I/usr/include/gtk-3.0 -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/atk-1.0 -L/usr/lib/x86_64-linux-gnu -lgtk-3 -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 -lpango-1.0 -lharfbuzz -lcairo
+ 
+ $./test
+
