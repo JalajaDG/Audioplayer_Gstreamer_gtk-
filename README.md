@@ -26,3 +26,5 @@ pkg-config --version
 //check for compiler and builder tools
 sudo apt install build-essential
 
+//You might also need Meson and Ninja for building some GTK+ applications (especially for the latest versions)
+sudo apt install meson ninja-build
