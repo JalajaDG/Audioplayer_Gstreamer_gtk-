@@ -22,3 +22,7 @@ sudo apt install libgtk-3-dev
 pkg-config --version
 /* if not installed */sudo apt install pkg-config
 
+
+//check for compiler and builder tools
+sudo apt install build-essential
+
