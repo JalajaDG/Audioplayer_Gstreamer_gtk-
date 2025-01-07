@@ -17,3 +17,8 @@ sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 //GTK+ Development Libraries
 sudo apt install libgtk-3-dev
 
+
+//pkg-config is a tool that helps in managing library flags during the compilation process. This is necessary for linking the right libraries for both GStreamer and GTK+
+pkg-config --version
+/* if not installed */sudo apt install pkg-config
+
