@@ -14,4 +14,6 @@ pkg-config --modversion gtk+-3.0
 //GStreamer Development Libraries
 sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
+//GTK+ Development Libraries
+sudo apt install libgtk-3-dev
 
