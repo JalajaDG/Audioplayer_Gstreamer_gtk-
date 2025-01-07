@@ -28,3 +28,7 @@ sudo apt install build-essential
 
 //You might also need Meson and Ninja for building some GTK+ applications (especially for the latest versions)
 sudo apt install meson ninja-build
+
+//check for audio suport
+pulseaudio --version
+
