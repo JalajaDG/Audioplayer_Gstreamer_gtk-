@@ -151,3 +151,55 @@ pulseaudio --version
  sudo apt-get install gtk-3-examples
 gtk3-icon-browser
 GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);
+
+
+
+➡️ShowAudioFilesList
+	◾️GtkWidget *dialog;: Declares a variable for the dialog widget.
+	◾️GtkWidget *content_area;: Declares a variable for the dialog's content area widget.
+	◾️GtkWidget *scrolled_window;: Declares a variable for the scrolled window widget (a container that adds scrollbars to its child 	    widgets).
+	◾️GtkWidget *list_box;: Declares a variable for the list box widget that will display the audio files.
+	◾️GtkWidget *window = GTK_WIDGET(data);: Converts the data parameter (passed to the function) to a GtkWidget pointer, assuming it's 		 the main application window.
+	◾️dialog = gtk_dialog_new_with_buttons("Audio Files",
+                                     GTK_WINDOW(window),
+                                     GTK_DIALOG_MODAL,
+                                     "_Close", GTK_RESPONSE_CLOSE,
+                                     NULL);
+                  ◾️gtk_dialog_new_with_buttons: Creates a new dialog window.
+		◾️"Audio Files": The title of the dialog.
+		◾️GTK_WINDOW(window): The parent window for the dialog.
+		◾️GTK_DIALOG_MODAL: Makes the dialog modal, meaning it blocks interaction with the parent window while open.
+		◾️"_Close", GTK_RESPONSE_CLOSE: Adds a "Close" button to the dialog with a GTK_RESPONSE_CLOSE response ID.
+		◾️NULL: No additional buttons are added.
+	◾️Get the Content Area:
+		◾️content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+		◾️gtk_dialog_get_content_area: Retrieves the content area of the dialog, where additional widgets can be placed.
+
+	◾️Add a Scrolled Window
+		◾️gtk_scrolled_window_new(NULL, NULL): Creates a new scrolled window with default adjustments (no custom vertical or 		horizontal adjustments).
+		◾️gtk_scrolled_window_set_policy: Sets the scroll policy for the window.
+			◾️GTK_POLICY_AUTOMATIC: Scrollbars are added automatically when content exceeds the visible area.
+		◾️gtk_widget_set_size_request: Sets a size of 400x300 pixels for the scrolled window.
+		◾️gtk_container_add: Adds the scrolled window to the dialog's content area.
+	◾️Create a List Box
+		◾️gtk_list_box_new(): Creates a new GtkListBox widget, which is used to display a vertical list of items.
+		◾️gtk_container_add: Adds the list box to the scrolled window.
+
+	◾️Add Playlist Items
+
+		◾️for (const string &song : playlist): Iterates over the playlist vector, where each song is a string representing the f		ile path of an audio file.
+		◾️gtk_label_new(song.c_str()): Creates a label widget to display the song text.
+		◾️song.c_str(): Converts the C++ string to a C-style string (required by GTK functions).
+		◾️gtk_list_box_insert: Adds the label to the list box.
+		◾️-1: Inserts the label at the end of the list
+	◾️gtk_widget_show_all(dialog);
+	◾️gtk_dialog_run(GTK_DIALOG(dialog));=Runs the dialog in a blocking mode, waiting for user interaction
+	◾️gtk_widget_destroy(dialog);
+
+
+
+
+
+
+
+	
