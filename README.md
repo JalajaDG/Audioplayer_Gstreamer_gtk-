@@ -64,6 +64,13 @@ pulseaudio --version
 		◾️"_Cancel", GTK_RESPONSE_CANCEL: Adds a "Cancel" button to the dialog that returns a response code of GTK_RESPONSE_CANCEL 			  when clicked
 		◾️"_Open", GTK_RESPONSE_ACCEPT: Adds an "Open" button that returns a response code of GTK_RESPONSE_ACCEPT when clicked.
 		◾️NULL: Indicates the end of the button list.
+	◾️add filter to  Filter for Audio
+		◾️A GtkFileFilter is added to restrict the dialog to audio files. It filters files with extensions .mp3, .wav, and .ogg 			 using their MIME types.
+		◾️gtk_file_filter_add_mime_type(filter, "audio/mpeg") allows .mp3 files.
+		◾️gtk_file_filter_add_mime_type(filter, "audio/wav") allows .wav files.
+		◾️gtk_file_filter_add_mime_type(filter, "audio/ogg") allows .ogg files.
+
+
 	◾️running the dialog
 		◾️if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		◾️gtk_dialog_run: Displays the dialog and waits for the user to respond (e.g., by clicking "Open" or "Cancel").

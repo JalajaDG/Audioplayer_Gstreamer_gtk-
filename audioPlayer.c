@@ -17,16 +17,27 @@ static void on_button_clicked(GtkWidget *widget, gpointer data) {
     // Create a FileChooserDialog for selecting folders
     dialog = gtk_file_chooser_dialog_new("Open Folder",
                                          GTK_WINDOW(window),
-                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                         GTK_FILE_CHOOSER_ACTION_OPEN,
                                          "_Cancel", GTK_RESPONSE_CANCEL,
                                          "_Open", GTK_RESPONSE_ACCEPT,
                                          NULL);
+                                   
 
+
+     // Add a filter for audio files
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_add_mime_type(filter, "audio/mpeg");  // .mp3
+    gtk_file_filter_add_mime_type(filter, "audio/wav");   // .wav
+    gtk_file_filter_add_mime_type(filter, "audio/ogg");   // .ogg
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+    
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         // Get the selected folder
-        char *folder_path;
-        folder_path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        char *file_path;
+        file_path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        // Extract the folder path from the full file path
 
+        char *folder_path = g_path_get_dirname(file_path);
         // Print the folder path
         g_print("Selected folder: %s\n", folder_path);
 
