@@ -69,7 +69,7 @@ pulseaudio --version
 		◾️gtk_file_filter_add_mime_type(filter, "audio/mpeg") allows .mp3 files.
 		◾️gtk_file_filter_add_mime_type(filter, "audio/wav") allows .wav files.
 		◾️gtk_file_filter_add_mime_type(filter, "audio/ogg") allows .ogg files.
-
+		◾️ gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
 	◾️running the dialog
 		◾️if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
@@ -87,10 +87,23 @@ pulseaudio --version
 		◾️gtk_label_set_text(GTK_LABEL(label), folder_path);
 		◾️g_object_get_data: Retrieves the widget (a label in this case) that was previously stored in the window object using the 				key "folder_label".
 		◾️gtk_label_set_text: Updates the text displayed in the label to show the selected folder path.
-	◾️Freeing the Folder Path Memory
-		◾️g_free(folder_path);
-		◾️g_free: Frees the memory allocated for the folder_path. GTK allocates memory dynamically for paths, and it's the 			  programmer's responsibility to release it to avoid memory leaks.
+	◾️. Iterate Over Files
+		◾️if (dir): Ensures the directory was successfully opened before proceeding.
+		◾️g_dir_read_name(dir): Reads the name of the next entry in the directory.
+		◾️Returns the name of the file or directory (excluding the path) as a string.
+		◾️Returns NULL when there are no more entries.
+		◾️Filter Audio Files
+			◾️g_str_has_suffix(file_name, ".mp3") ||
+		◾️construct full file path
+			◾️string file_path = string(folder_path) + "/" + string(file_name);
+	◾️add to playlist
+		◾️playlist.push_back(file_path);
+	◾️close directory =g_dir_close(dir);
 
+	◾️Freeing the Folder Path Memory
+		◾️g_free(file_path);
+		◾️g_free: Frees the memory allocated for the folder_path. GTK allocates memory dynamically for paths, and it's the 			  programmer's responsibility to release it to avoid memory leaks.
+	
 	◾️Destroying the Dialog
 		◾️gtk_widget_destroy(dialog);
 
@@ -126,3 +139,15 @@ pulseaudio --version
                    ◾️expand (gboolean):This determines whether the widget should expand to take up any remaining space in the container.
 		 ◾️fill (gboolean):This determines whether the widget should "fill" the available space within its allocated size. If 			   expand is TRUE, this decides if the widget fills the extra space.
 		 ◾️padding=The amount of space (in pixels) to add between this widget and the other widgets in the GtkBox. 
+		 
+		 
+		 
+		 
+		 
+		 
+		 
+		 
+➡️icons
+ sudo apt-get install gtk-3-examples
+gtk3-icon-browser
+GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);

@@ -1,15 +1,15 @@
 
 //gcc `pkg-config --cflags gtk+-3.0` audioPlayer.c -o ap `pkg-config --libs gtk+-3.0`
 
-
+#include<iostream>
 #include <gtk/gtk.h>
+#include<string.h>
 #include <vector>
-#include <string>
 
 
 using namespace std;
 static char *folder_path;
-static vector<string> playlist;
+static vector<string> song_list;
 
 // Callback function when the window is closed
 static void on_window_destroy(GtkWidget *widget, gpointer data) {
@@ -50,43 +50,42 @@ static void on_button_clicked(GtkWidget *widget, gpointer data) {
         g_print("Selected folder: %s\n", folder_path);
 
         // Update the label with the selected folder path
-        GtkWidget *label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "folder_label"));
+        GtkWidget *label = g_object_get_data(G_OBJECT(window), "folder_label");
         gtk_label_set_text(GTK_LABEL(label), folder_path);
 
-        g_free(file_path); // Free the memory allocated for the folder path
+        g_free(file_path);
         
         
-                // Clear the previous playlist
-        playlist.clear();
-          // Traverse the folder and add audio files to the playlist
+        
+        // Clear the existing song list before adding new songs
+        song_list.clear();
+
+        // Open the directory and list audio files
         GDir *dir = g_dir_open(folder_path, 0, NULL);
-        if (dir) {
-            const char *file_name;
+        if (dir != NULL) {
+            const gchar *file_name;
             while ((file_name = g_dir_read_name(dir)) != NULL) {
                 if (g_str_has_suffix(file_name, ".mp3") ||
                     g_str_has_suffix(file_name, ".wav") ||
                     g_str_has_suffix(file_name, ".ogg")) {
-                    // Construct the full file path
-                    string file_path = string(folder_path) + "/" + string(file_name);
-                    playlist.push_back(file_path); // Add to the playlist
+                    song_list.push_back(file_name);
                 }
             }
             g_dir_close(dir);
         }
 
-/*
-// Print the playlist for debugging
-        g_print("Playlist contains:\n");
-        for (const string &song : playlist) {
-            g_print("%s\n", song.c_str());
-        }
-        */
     }
+
     gtk_widget_destroy(dialog); // Destroy the dialog after use
 }
 
 static void ShowAudioFilesList(GtkWidget *widget, gpointer data) {
-  
+    GtkWidget *window = GTK_WIDGET(data);
+
+   for(int i=0;i<song_list.size();i++)
+   {
+   	cout<<song_list[i]<<endl;
+}
 }
 
 int main(int argc, char *argv[]) {
@@ -120,8 +119,9 @@ int main(int argc, char *argv[]) {
    // Create THE 3RD PARTITON
    GtkWidget *features_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);
+//gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
 
-       g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
+       g_signal_connect(ShowAudioFilesIcon, "button-press-event", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
  
 
 
