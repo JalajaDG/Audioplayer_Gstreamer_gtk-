@@ -47,29 +47,45 @@ int main(int argc, char *argv[]) {
     // Create a window
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL); // Create a top-level window
     gtk_window_set_title(GTK_WINDOW(window), "Simple GTK Window"); // Set the title of the window
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 200); // Set the size of the window
+    gtk_window_set_default_size(GTK_WINDOW(window), 600, 400); // Set the size of the window
 
 
  // Create a vertical box to divide the window into two parts
-    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // Vertical box with 10px spacing
-
- // Create the first partition (can be a label or any widget)
-    GtkWidget *label = gtk_label_new("First Partition");
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); // Vertical box with 10px spacing
     
-    // Associate the label with the window
-    g_object_set_data(G_OBJECT(window), "folder_label", label);
-      // Create a button with the label 
-    GtkWidget *button = gtk_button_new_with_label("open folder");
-        gtk_widget_set_size_request(button, 100, 30);
+    //FOLDER BOX
+    GtkWidget *folderBox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,0);
+    GtkWidget *label = gtk_label_new("No folder selected"); // Label to display the folder path
+    g_object_set_data(G_OBJECT(window), "folder_label", label); // Store the label in the window's data
+
+    
+    GtkWidget *button = gtk_button_new_with_label("Open Folder"); // Button to open folder
+ //   gtk_widget_set_size_request(button, 10, 10);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_button_clicked), window); // Connect button signal
+
+    // Set the width of folderBox to 300 pixels (for example)
+	//gtk_widget_set_size_request(folderBox, 10, 10); // 300px width, -1 for automatic height
+
+    // Create the second partition (empty for now)
+    GtkWidget *second_partition = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+   GtkWidget *second_label = gtk_label_new("Second Partition");
+    gtk_box_pack_start(GTK_BOX(second_partition), second_label, TRUE, TRUE, 0); // Add the label to the second partition
+
+   // Create THE 3RD PARTITON
+   GtkWidget *features_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+   GtkWidget *third_label = gtk_label_new("features Partition");
+   gtk_box_pack_start(GTK_BOX(features_box), third_label, TRUE, TRUE, 0); // Add the label to the second partition
+
+   
+   // Add label and button to the first partition
+    gtk_box_pack_start(GTK_BOX(folderBox), label, TRUE, TRUE, 0);  // Expand label
+    gtk_box_pack_start(GTK_BOX(folderBox), button, FALSE, FALSE, 0); // Button takes minimal space
 
 
-    // Connect the button's "clicked" signal to the callback function
-    g_signal_connect(button, "clicked", G_CALLBACK(on_button_clicked), window);
-
-
-  // Add the first partition and the button to the vbox (vertical box)
-    gtk_box_pack_start(GTK_BOX(vbox), label, TRUE, TRUE, 0); // Add label to the top partition
-    gtk_box_pack_start(GTK_BOX(vbox), button, FALSE, FALSE, 0); // Add button to the bottom partition
+  // Add the  folderbox,featurebox and second box  to the vbox (vertical box)
+    gtk_box_pack_start(GTK_BOX(vbox), folderBox, FALSE, FALSE, 0); // Add label to the top partition
+    gtk_box_pack_start(GTK_BOX(vbox), second_partition, TRUE, TRUE, 0); // Add empty second partition
+    gtk_box_pack_start(GTK_BOX(vbox), features_box, FALSE, FALSE, 0); // Add button to the bottom partition
 
     // Add the vbox to the window
     gtk_container_add(GTK_CONTAINER(window), vbox);

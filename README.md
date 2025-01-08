@@ -104,4 +104,18 @@ pulseaudio --version
 		◾️Later, you can retrieve the associated widget using g_object_get_data
 	
 
-
+➡️TO SET THE HEIGHT AND WIDTH OF FOLDERBOX,
+	◾️INSTEAD Of these;
+		◾️ gtk_widget_set_size_request(button, 10, 10);
+		◾️gtk_widget_set_size_request(folderBox, 10, 10); // WIDTH,HEIGHT
+	◾️use;
+		 ◾️gtk_box_pack_start(GTK_BOX(vbox), folderBox, FALSE, FALSE, 0); // Add label to the top partition
+		 ◾️set to false,false.
+		 ◾️ void gtk_box_pack_start(GtkBox *box,
+                        GtkWidget *child,
+                        gboolean expand,
+                        gboolean fill,
+                        guint padding);
+                   ◾️expand (gboolean):This determines whether the widget should expand to take up any remaining space in the container.
+		 ◾️fill (gboolean):This determines whether the widget should "fill" the available space within its allocated size. If 			   expand is TRUE, this decides if the widget fills the extra space.
+		 ◾️padding=The amount of space (in pixels) to add between this widget and the other widgets in the GtkBox. 
