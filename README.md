@@ -198,6 +198,44 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 
 
 
+//using playbin
+➡️start to play the song when new folder opened and clicked a song..inside on_button_clicked->on dialog run =play_selected_song
+	◾️include gstreamer library=#include <gst/gst.h>
+	◾️initialize gstreamer=     gst_init(&argc, &argv);
+	◾️include gstreamer-1.0 flag =//g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+	◾️error=The g_object_get_data function returns a gpointer (a void*), which needs to be explicitly cast to the correct type
+		GtkWidget *label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "folder_label"));
+	◾️ play_selected_song(full_path.c_str());=You don't necessarily need to use a C-style string (const char*). You can pass a std::string to the play_selected_song method as well. 			However, since GStreamer expects a const char* for the URI parameter,
+
+	 ◾️   if (playbin == NULL)=  meaning it hasn't been created yet.
+	◾️Create the playbin element:    
+		◾️playbin = gst_element_factory_make("playbin", "playbin");
+			It creates a new element based on the specified factory type (in this case, "playbin") and a name ("playbin"). The "playbin" element is a simple player that 				can handle multimedia content (audio or video).
+	◾️Check if playbin creation failed
+	◾️Set the URI for the file to be played:
+		    ◾️g_object_set(playbin, "uri", g_strdup_printf("file://%s", file_path), NULL);
+			◾️g_object_set: This is a GObject function that sets the properties of a GObject (in this case, playbin). Here, it sets the uri property of the playbin 				element.
+			◾️playbin: This is the GObject (GStreamer element) whose property is being set.
+			◾️"uri": This is the name of the property that specifies the URI (Uniform Resource Identifier) of the file to be played. GStreamer uses this to know the 			location of the media file.
+			◾️g_strdup_printf("file://%s", file_path): This function creates a new string from the format file:// followed by the provided file_path. The g_strdup_printf 				function works like sprintf, but it allocates memory for the resulting string and returns a pointer to it. The file:// prefix is necessary to specify the URI 				scheme for file-based media.
+			◾️g_strdup_printf is a function from the GLib library that behaves similarly to the C printf
+			◾️g_strdup_printf("file://%s", file_path) takes the file_path (which might be something like /home/user/music/song.mp3) and combines it with the file:// 				prefix to create a URI string.
+			◾️NULL: The last parameter of g_object_set is terminated by NULL, as it accepts a list of key-value pairs.
+	◾️Set the playbin state to playing:
+	    	◾️GstStateChangeReturn ret = gst_element_set_state(playbin, GST_STATE_PLAYING);
+			◾️gst_element_set_state: This function changes the state of a GStreamer element. Elements have different states (like GST_STATE_NULL, GST_STATE_READY, 				◾️GST_STATE_PAUSED, and GST_STATE_PLAYING), which define the element's behavior.
+			◾️playbin: This is the GStreamer element whose state is being changed.
+			◾️GST_STATE_PLAYING: This is the target state. It means the element should start playing the media.
+			◾️GstStateChangeReturn: This is the return type of gst_element_set_state. It indicates the result of the state change, such as GST_STATE_CHANGE_FAILURE if the 					state change fails.
+	◾️Check if the state change was successful:    if (ret == GST_STATE_CHANGE_FAILURE) {
+	
+
+
+
+
+➡️ShowAudioFilesList
+	◾️
+
 
 
 
