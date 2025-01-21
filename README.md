@@ -98,6 +98,7 @@ pulseaudio --version
 			◾️string file_path = string(folder_path) + "/" + string(file_name);
 	◾️add to playlist
 		◾️playlist.push_back(file_path);
+	◾️sort the vector =to see the music list as in normal folder
 	◾️close directory =g_dir_close(dir);
 
 	◾️Freeing the Folder Path Memory
