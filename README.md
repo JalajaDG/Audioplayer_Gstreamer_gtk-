@@ -196,6 +196,11 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 	◾️gtk_widget_show_all(dialog);
 	◾️gtk_dialog_run(GTK_DIALOG(dialog));=Runs the dialog in a blocking mode, waiting for user interaction
 	◾️gtk_widget_destroy(dialog);
+	◾️while sperating this method() into openFOlder.cpp =Static functions are only visible within the file they are defined in, so their declaration should not be in the header 			file.
+		◾️both openFolder.h and openFolder.cpp cant have as static void on_opeFolder_clicked()= bcz.
+		◾️A static function in C++ has internal linkage. This means the function is visible only within the file where it is defined.
+		◾️The linker does not see static functions across different translation units (.cpp files). Therefore, you cannot call a static function from one .cpp file in another.
+
 
 
 
