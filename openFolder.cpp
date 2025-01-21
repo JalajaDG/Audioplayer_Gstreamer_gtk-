@@ -5,7 +5,7 @@ vector<string> song_list; // Define the global song list
 static GstElement *playbin = NULL;
 
 
-static void play_selected_song(const char *file_path) {
+static void play_selected_item(const char *file_path) {
     // Check if the playbin element exists, if not, create it
     if (playbin == NULL) {
         playbin = gst_element_factory_make("playbin", "playbin");
@@ -88,7 +88,7 @@ static void play_selected_song(const char *file_path) {
         if (!song_list.empty()) {
             currently_playing_song_index = 0;
             std::string full_path = std::string(folder_path) + "/" + song_list[currently_playing_song_index];
-            play_selected_song(full_path.c_str());
+            play_selected_item(full_path.c_str());
             g_print("Now playing: %s\n", full_path.c_str());
         } else {
             g_print("No audio files found in the selected folder.\n");

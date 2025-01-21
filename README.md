@@ -244,7 +244,7 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 	◾️here as we know this uses song_list vector ..the contents to this vector  is filled inside  openfolder.cpp so include openfolder.h (in that song_list is defined as extern )
 
 
-
+ShowAudioFilesList
 
 
 	
