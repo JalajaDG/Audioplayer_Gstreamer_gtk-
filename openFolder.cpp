@@ -77,7 +77,7 @@ static void play_selected_song(const char *file_path) {
             }
             
    	 // Sort the song_list alphabetically
-   	 sort(song_list.begin(), song_list.end());
+   	// sort(song_list.begin(), song_list.end());
 
             g_dir_close(dir);
         } else {
