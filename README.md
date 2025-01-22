@@ -244,7 +244,153 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 	◾️here as we know this uses song_list vector ..the contents to this vector  is filled inside  openfolder.cpp so include openfolder.h (in that song_list is defined as extern )
 
 
-ShowAudioFilesList
+➡️NNow in openFOlder.cpp 
+	>we must play song without using playbin
+	>so first check if its a mp3 file or not?
+	>
 
+
+➡️playing local audio file
+	>to play local audio files, a typical pipeline includes these elements:filesrc,decodebin,audioconvert,audioresample,autoaudiosink
+		◾️filesrc: Reads the audio file from the filesystem.
+		◾️decodebin: Automatically detects and decodes the file format.
+		◾️audioconvert: Converts the audio to a format that can be processed further.
+		◾️audioresample: Resamples the audio if needed to match the requirements of the sink.
+		◾️autoaudiosink: Automatically chooses the appropriate audio output (e.g., speakers or headphones).
+	➡️steps
+		◾️1.initialize gstreamer
+		◾️2.cretae pipeline
+		◾️3. Create Elements (filesrc, decodebin, audioconvert,audioresample, autoaudiosink).
+		◾️4.Add Elements to the Pipeline
+		◾️5.Link the elements (static and dynamic linking).  (refer below abt static and dynamic linking)
+		◾️ 6.Set the File Source
+		◾️7.Start Playback=Set the pipeline state to PLAYING.
+		◾️8.Add a main loop to keep the application running.
+		◾️ 9.Cleanup
+>discuss y audioconvert and audioresample is important?
+		◾️Suppose you have a high-resolution audio file with the following properties:
+		  Audio File Details
+			Format: PCM 24-bit (signed 24-bit little-endian)
+			Sample Rate: 96,000 Hz (96 kHz)
+			Channels: 2 (Stereo)
+		 Audio Sink Capabilities:Your audio sink (autoaudiosink, alsasink, or pulsesink) only supports:
+			Format: PCM 16-bit (signed 16-bit little-endian)
+			Sample Rate: 44,100 Hz (44.1 kHz)
+			Channels: 2 (Stereo)
+		◾️This is common with many consumer-grade sound cards or built-in speakers, which don't support high-res audio.
+		◾️If you construct the pipeline without conversion:
+		 gst-launch-1.0 filesrc location=high_res_audio.wav ! decodebin ! autoaudiosink
+			◾️ERROR: from element /GstPipeline:pipeline0/GstAutoAudioSink:audiosink0: Could not negotiate format
+			  y error=
+				◾️filesrc reads the file.
+				◾️decodebin decodes the audio into raw PCM data with its original properties (24-bit, 96 kHz).
+				◾️autoaudiosink tries to negotiate a format it supports (16-bit, 44.1 kHz), but since the input is in 24-bit/96 kHz and no intermediate element is 					 handling the conversion, the pipeline fails with an error like:
+
+		◾️Pipeline With audioconvert and audioresample
+			gst-launch-1.0 filesrc location=high_res_audio.wav ! decodebin ! audioconvert ! audioresample ! autoaudiosink
+				◾️filesrc reads the high-res audio file.
+				◾️decodebin decodes it into raw PCM audio with properties:   audio/x-raw, format=S24LE, rate=96000, channels=2
+				◾️audioconvert checks the capabilities of the downstream element (autoaudiosink).
+					It detects that autoaudiosink supports 16-bit audio but not 24-bit.
+					It converts the audio from S24LE (24-bit PCM) to S16LE (16-bit PCM).
+
+				◾️The audio caps after conversion become:
+					audio/x-raw, format=S16LE, rate=96000, channels=2
+
+				◾️audioresample checks that the sink requires a 44.1 kHz sample rate.It resamples the audio from 96,000 Hz to 44,100 Hz.
+					audio/x-raw, format=S16LE, rate=44100, channels=2
+				◾️The sink receives audio that matches its capabilities (16-bit, 44.1 kHz, stereo) and plays it without issues.
+
+>how audioconvert suppports multichannel audio i/p to monochannel audio as o/p?
+        Watching a 5.1 Surround Movie on Headphones:
+	◾️Input: 6 channels (5.1 surround)
+	  Output: 2 channels (stereo)
+	◾️gst-launch-1.0 filesrc location=surround_sound.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=2" ! autoaudiosink
+		◾️decodebin extracts the raw 5.1 audio.
+		◾️audioconvert detects that the downstream (autoaudiosink) only supports stereo.
+		◾️audioconvert performs downmixing:
+			◾️Combines the six channels into two (left and right) while preserving balance and spatial information.
+			◾️Ensures bass and dialog are included in the stereo output.
+		◾️Why Downmixing Is Necessary
+			◾️Compatibility:Stereo speakers cannot play multi-channel audio directly. Downmixing ensures the audio can still be heard.
+			◾️Without downmixing, critical elements like dialog (center channel) or bass (LFE) might be lost entirely.
+			◾️Balanced Listening:Downmixing ensures a pleasant listening experience by distributing all channels proportionally.
+		◾️Debugging Downmixing in GStreamer
+			◾️GST_DEBUG=audioconvert:5 gst-launch-1.0 filesrc location=surround_sound.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=2" ! autoaudiosink
+				To debug how channels are being mixed, you can inspect the audio caps and see how the audioconvert element processes them.
+			◾️GST_DEBUG=audioconvert:5
+				Purpose: Enables detailed logging for the audioconvert element.
+				Debug Level (5): The highest debug level, showing detailed information about how audioconvert processes the audio.
+				Output: Logs are printed to the terminal, showing input/output caps (capabilities) and processing steps.
+			◾️"audio/x-raw,channels=2"
+				Caps Filter: "audio/x-raw,channels=2"
+				Specifies that the audio output must have 2 channels (stereo).
+				audio/x-raw: Indicates raw, uncompressed audio data.
+				channels=2: Restricts the output to 2 audio channels.
+			◾️Sample Debug Output:
+				audioconvert0: Input caps = audio/x-raw, format=S16LE, rate=48000, channels=6
+				audioconvert0: Downmixing 5.1 channels to 2 channels
+				audioconvert0: Output caps = audio/x-raw, format=S16LE, rate=48000, channels=2
+			
+
+
+
+➡️Linking elements inside bin(after adding all elements inside bin)
+| **Link**        | **From Element**     | **To Element**       | **Link Type**  | **Reason**                                                                                     |
+|-----------------|----------------------|----------------------|----------------|-------------------------------------------------------------------------------------------------|
+| Static Link     | filesrc              | decodebin            | Static         | The source (`filesrc`) directly passes the file to `decodebin` for decoding.                 |
+| Dynamic Link    | decodebin            | audioconvert         | Dynamic        | `decodebin` has a dynamic pad that changes based on the decoded format. We use the `pad-added` signal
+									|to connect it to `audioconvert`.
+ 									| 
+| Static Link     | audioconvert         | audioresample        | Static         | `audioconvert` outputs a compatible format which is resampled by `audioresample`.              |
+| Static Link     | audioresample        | autoaudiosink        | Static         | After the audio is resampled, it is sent to `autoaudiosink` for playback.                     |
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+◾️Static Link: These are elements that can be linked directly because their input/output pads are fixed. For example, filesrc (the source) can be directly linked to decodebin (the decoder), and audioconvert can be linked to audioresample, which then links to autoaudiosink.
+	◾️gst__element_link(,);
+	◾️gst__element_link_many(, , ,NULL);	
+	
+◾️Dynamic Link: This occurs because some elements, like decodebin, have dynamic pads that are created during runtime. The pad is not known at compile time, so we need to listen for the pad-added signal to link it to the next element (audioconvert).
+	◾️g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
+	◾️parameters;
+		-obj emitting signal
+		-signal name
+		-pointer to callback when signal is emmiteed
+		-gpointer data-any data to be passed to callback function()
+	
+	◾️This connects the "pad-added" signal of decodebin to the callback function.The callback function is invoked whenever a new pad is created by decodebin.
+	◾️The callback function is responsible for linking the dynamically created pad from decodebin to the next element, e.g., audioconvert.
+	◾️In the callback, get the static sink pad of the next element (audioconvert).
+	◾️Link the dynamically created pad to the static pad of the next element.
+	◾️static void on_pad_added(GstElement *element, GstPad *pad, gpointer user_data)
+	-parameters;
+		-GStreamer element that emitted the "pad-added" signal.
+		-This is the newly added pad from the decodebin element.
+		-additional data passed
+
+
+➡️ playAudio.cpp
+ void play_audioFile(const string &file_path)
+ 	◾️here & bcz pass by reference,instead of pass by value, to  avoid copying the entire string
+ 	◾️By using &, you're passing the original string directly to the function without the overhead of copying
+ 	◾️const bcz=When you use const (like const std::string& file_path), you promise not to modify the string inside the function. This guarantees that the function won’t 		accidentally change the value of the file_path passed to it.
+ 	◾️now set filesrc elements location property to this passed filepath using  = g_object_set()
+ 	◾️set pipeline to playing set,and check
+	◾️add bus to check eos=   Bus=gst_element_get_bus(pipeline);
+	◾️get msg  from bus
+	◾️    // Handle errors or end of stream (EOS)
+	◾️unref msg,bus;
+
+➡️ openFolder.cpp
+use a thread for calling  =play_selected_item()  or else..it will block next line(print song vector,and file explorer window wont close)
 
 	
+
+
+
+
+
+
+
+
+
+

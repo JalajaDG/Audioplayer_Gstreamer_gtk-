@@ -1,34 +1,29 @@
 #include "openFolder.h"
-
+#include "PlayAudio.h"
 
 vector<string> song_list; // Define the global song list
 static GstElement *playbin = NULL;
 
 
 static void play_selected_item(const char *file_path) {
-    // Check if the playbin element exists, if not, create it
-    if (playbin == NULL) {
-        playbin = gst_element_factory_make("playbin", "playbin");
-        if (!playbin) {
-            g_printerr("Failed to create playbin element\n");
-            return;
-        }
-    }
-      // Stop any currently playing song
-    gst_element_set_state(playbin, GST_STATE_NULL);
+	
+// Convert file_path and folder_path to string
+//check if selected item is song/video
+    if (g_str_has_suffix(file_path, ".mp3") ||
+        g_str_has_suffix(file_path, ".wav") ||
+        g_str_has_suffix(file_path, ".ogg"))
+     {
+     
+        PlayAudio playAudio;
+       const string filePath(file_path);
 
-   // Explicitly set the URI for the new file
-    gchar *uri = g_strdup_printf("file://%s", file_path);
-    g_object_set(playbin, "uri", uri, NULL);
-    g_free(uri);
+        playAudio.play_audioFile(filePath);
+        
 
-    // Set the playbin state to playing
-    GstStateChangeReturn ret = gst_element_set_state(playbin, GST_STATE_PLAYING);
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        g_printerr("Failed to set pipeline to PLAYING state\n");
-    } else {
-        g_print("Now playing: %s\n", file_path);
-    }
+                    	
+                    	
+      }
+  
 }
 
 
@@ -88,7 +83,15 @@ static void play_selected_item(const char *file_path) {
         if (!song_list.empty()) {
             currently_playing_song_index = 0;
             std::string full_path = std::string(folder_path) + "/" + song_list[currently_playing_song_index];
-            play_selected_item(full_path.c_str());
+          //  play_selected_item(full_path.c_str());
+           
+            // Create a C++ thread to play the selected item..bcz if not the next lines (printing vetor and closing file explorer doesn't happen)
+            std::thread play_thread([full_path]() {
+                play_selected_item(full_path.c_str());
+            });
+            play_thread.detach(); // Detach the thread so it runs independently
+
+
             g_print("Now playing: %s\n", full_path.c_str());
         } else {
             g_print("No audio files found in the selected folder.\n");

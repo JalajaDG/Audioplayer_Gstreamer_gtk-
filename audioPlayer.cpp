@@ -6,6 +6,8 @@
 // g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp   -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
 
 // g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+
 #include<iostream>
 #include <gtk/gtk.h>
 #include<string.h>
@@ -16,6 +18,7 @@
 
 #include "openFolder.h" 
 #include "printPlaylist.h"
+#include "PlayAudio.h"
 
 #include<algorithm> //for sort
 using namespace std;

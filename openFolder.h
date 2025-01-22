@@ -11,7 +11,7 @@
 using namespace std;
 
 // Declare the function
- void play_selected_item(const char *file_path);
+ void play_selected_item(const char *file_path,char* folder_path);
  void on_openFolder_clicked(GtkWidget *widget, gpointer data);
  
 
