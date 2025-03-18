@@ -1,67 +1,68 @@
+#include "openFolder.h" //for currently_playing_song_index & folder_path
+
 #include "PlayAudio.h"
+int currently_playing_song_index;
 
-
-PlayAudio::PlayAudio()
-{
-  //initialize gstreamer
-  gst_init(NULL,NULL);
-
-  // Create the pipeline
-   pipeline=gst_pipeline_new("audio-pipeline");
-
-   if(!pipeline)
-   {
-    g_printerr("Failed to create audio pipeline ");
-    return;
-   }
-
-       // Create the GStreamer elements
-  filesrc=gst_element_factory_make("filesrc","filesrc");
-  decodebin=gst_element_factory_make("decodebin","decodebin");
-  audioconvert=gst_element_factory_make("audioconvert","audioconvert");
-  audioresample=gst_element_factory_make("audioresample","audioresample");
-  autoaudiosink=gst_element_factory_make("autoaudiosink","autoaudiosink");
-
-//check if all elements created
-
-    if (!filesrc || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
-        g_printerr("Failed to create one or more audio pipeline elements.\n");
-        return;
+ PlayAudio::PlayAudio()
+ {
+   //initialize gstreamer
+   gst_init(NULL,NULL);
+ 
+   // Create the pipeline
+    pipeline=gst_pipeline_new("audio-pipeline");
+ 
+    if(!pipeline)
+    {
+     g_printerr("Failed to create audio pipeline ");
+     return;
     }
-
-//add elements inside pipeline
-gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,autoaudiosink,NULL);
-
-
-    // Link the elements 
-
-    // (static linking for source to decodebin,
-    // dynamic link fo decodebin to audioconvert..using pad added signal,
-    // dynamic link fo audioconvert to audioresample,
-    // dynamic link fo audioresample to autoaudiosink)
-
-
-   if(!gst_element_link(filesrc,decodebin))
-   {
-    g_printerr("failed to link audio elements = sorce and decodebin\n");
-    return;
-   }
-
-  // Connect "pad-added" signal to the decodebin element
-  g_signal_connect(decodebin,"pad-added",G_CALLBACK(on_pad_added),audioconvert);
-
-   if(!gst_element_link_many(audioconvert,audioresample,autoaudiosink,NULL))
-   {
-     g_printerr("failed to link audio elements = audioconvert,audioresample  and sink\n");
-    return;
-   }
-
-
-
-
-
-}
-
+ 
+        // Create the GStreamer elements
+   filesrc=gst_element_factory_make("filesrc","filesrc");
+   decodebin=gst_element_factory_make("decodebin","decodebin");
+   audioconvert=gst_element_factory_make("audioconvert","audioconvert");
+   audioresample=gst_element_factory_make("audioresample","audioresample");
+   autoaudiosink=gst_element_factory_make("autoaudiosink","autoaudiosink");
+ 
+ //check if all elements created
+ 
+     if (!filesrc || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
+         g_printerr("Failed to create one or more audio pipeline elements.\n");
+         return;
+     }
+ 
+ //add elements inside pipeline
+ gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,autoaudiosink,NULL);
+ 
+ 
+     // Link the elements 
+ 
+     // (static linking for source to decodebin,
+     // dynamic link fo decodebin to audioconvert..usifng pad added signal,
+     // dynamic link fo audioconvert to audioresample,
+     // dynamic link fo audioresample to autoaudiosink)
+ 
+ 
+    if(!gst_element_link(filesrc,decodebin))
+    {
+     g_printerr("failed to link audio elements = sorce and decodebin\n");
+     return;
+    }
+ 
+   // Connect "pad-added" signal to the decodebin element
+   g_signal_connect(decodebin,"pad-added",G_CALLBACK(on_pad_added),audioconvert);
+ 
+    if(!gst_element_link_many(audioconvert,audioresample,autoaudiosink,NULL))
+    {
+      g_printerr("failed to link audio elements = audioconvert,audioresample  and sink\n");
+     return;
+    }
+ 
+ 
+ 
+ 
+ 
+ }
 //destructor
 PlayAudio::~PlayAudio()
 {
@@ -70,13 +71,18 @@ if(pipeline)
 {
   gst_element_set_state(pipeline,GST_STATE_NULL);
 gst_object_unref(pipeline);
+        pipeline = NULL; // Prevent using old reference
+
+
+}
+
+
+
 
 }
 
 
 
-
-}
 
 void PlayAudio::  on_pad_added(GstElement* element,GstPad* pad,gpointer user_data)
 {
@@ -85,6 +91,11 @@ void PlayAudio::  on_pad_added(GstElement* element,GstPad* pad,gpointer user_dat
      // Get the sink pad of audioconvert
     GstPad *sinkpad=gst_element_get_static_pad(audioconvert,"sink");
 
+    //  // Print pad capabilities for debugging
+    // GstCaps *caps = gst_pad_query_caps(pad, NULL);
+    // g_print("Pad capabilities: %s\n", gst_caps_to_string(caps));
+    // gst_caps_unref(caps);
+
     // Link the dynamic pad from decodebin to audioconvert
     if(gst_pad_link(pad,sinkpad)!= GST_PAD_LINK_OK)
     {
@@ -92,47 +103,151 @@ void PlayAudio::  on_pad_added(GstElement* element,GstPad* pad,gpointer user_dat
     }
   // Release the sinkpad reference
   gst_object_unref(sinkpad);
-
 }
-  void PlayAudio::play_audioFile(const string &file_path)
-  {
-    // Set the file path to the filesrc element's location property
-   g_object_set(filesrc,"location",file_path.c_str(),NULL);
-    // Set the file path to the filesrc element's location property
-    GstStateChangeReturn ret= gst_element_set_state(pipeline,GST_STATE_PLAYING);
-  if(ret==GST_STATE_CHANGE_FAILURE)
-   {
-   g_printerr(" audio pipeline= pipeline errro while changing its state to playing");
-   return;
-    }
-    // Wait for the pipeline to finish playing (blocking the thread here)
-
-   bus=gst_element_get_bus(pipeline);
-   msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, static_cast<GstMessageType>( GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
 
 
 
-    // Handle errors or end of stream (EOS)
-    if (msg != NULL) {
-        GError* err;
-        gchar* debug_info;
 
-         switch (GST_MESSAGE_TYPE(msg)) {
-            case GST_MESSAGE_ERROR:
-                gst_message_parse_error(msg, &err, &debug_info);
-                g_printerr("Error: %s\n", err->message);
-                g_error_free(err);
+
+
+
+
+
+gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data) {
+    PlayAudio *self = static_cast<PlayAudio*>(user_data);
+
+    switch (GST_MESSAGE_TYPE(msg)) {
+        case GST_MESSAGE_ERROR: {
+            GError *err;
+            gchar *debug_info = nullptr;  // Correctly declare debug_info
+
+            gst_message_parse_error(msg, &err, &debug_info);
+            g_printerr("Error: %s\n", err->message);
+
+            if (debug_info) {
+                g_print("Debug Info: %s\n", debug_info);
                 g_free(debug_info);
-                break;
-            case GST_MESSAGE_EOS:
-                g_print("End of stream\n");
-                break;
-            default:
-                // Unexpected message type
-                break;
+            }
+
+            g_error_free(err);
+            break;
         }
-        gst_message_unref(msg);
+        case GST_MESSAGE_EOS:
+            g_print("******************End of stream. Playing next song******************\n");
+           self->play_next();
+            break;
+        default:
+            break;
     }
 
-    gst_object_unref(bus);
-  }
+    return TRUE; // Keep watching for messages
+}void PlayAudio::openFolderAndPlayFirstSong(const string &file_path)
+{
+    if (!pipeline) {
+        g_printerr("Error: Pipeline is NULL\n");
+        return;
+    }
+    
+    if (!filesrc) {
+        g_printerr("Error: filesrc is NULL\n");
+        return;
+    }
+
+    if (file_path.empty()) {
+        g_printerr("Error: file_path is empty\n");
+        return;
+    }
+
+    g_print("Setting filesrc location to: %s\n", file_path.c_str());
+
+    // Set the file path to the filesrc element's location property
+    g_object_set(filesrc, "location", file_path.c_str(), NULL);
+
+    // Set pipeline state to playing
+    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+    {
+        g_printerr("Error: Pipeline failed to change state to PLAYING\n");
+        return;
+    }
+}
+
+
+void PlayAudio::play_audioFile(const string &file_path,const string& folder_path)
+{
+    cout << "Coming inside PlayAudio::playfile =" << folder_path << endl;
+
+    // **STOP the currently playing stream before starting a new one**
+    if (pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+        gst_object_unref(pipeline);  // Free pipeline resources
+        pipeline = NULL;
+        g_print("Previous song completely stopped.\n");
+    }
+
+    // Reinitialize the pipeline and elements
+    pipeline = gst_pipeline_new("audio-pipeline");
+    if (!pipeline) {
+        g_printerr("Failed to create audio pipeline\n");
+        return;
+    }
+
+    filesrc = gst_element_factory_make("filesrc", "filesrc");
+    decodebin = gst_element_factory_make("decodebin", "decodebin");
+    audioconvert = gst_element_factory_make("audioconvert", "audioconvert");
+    audioresample = gst_element_factory_make("audioresample", "audioresample");
+    autoaudiosink = gst_element_factory_make("autoaudiosink", "autoaudiosink");
+
+    if (!filesrc || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
+        g_printerr("Failed to create one or more audio pipeline elements.\n");
+        return;
+    }
+
+    gst_bin_add_many(GST_BIN(pipeline), filesrc, decodebin, audioconvert, audioresample, autoaudiosink, NULL);
+
+    if (!gst_element_link(filesrc, decodebin)) {
+        g_printerr("Failed to link audio elements = source and decodebin\n");
+        return;
+    }
+
+    g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
+
+    if (!gst_element_link_many(audioconvert, audioresample, autoaudiosink, NULL)) {
+        g_printerr("Failed to link audio elements = audioconvert, audioresample, and sink\n");
+        return;
+    }
+
+    cout << "Setting file path: " << file_path.c_str() << endl;
+    g_object_set(filesrc, "location", file_path.c_str(), NULL);
+
+    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        g_printerr("Error while changing pipeline state to PLAYING\n");
+        return;
+    }
+    GstBus *bus = gst_element_get_bus(pipeline);
+
+// Attach a watch function to handle messages asynchronously ..otherwise it bloacks printplaylist dialog when playin song if gst_pop_filter used
+gst_bus_add_watch(bus, (GstBusFunc)on_message, this);
+gst_object_unref(bus);
+
+
+    
+}
+
+
+void PlayAudio::play_next()
+{
+    if (currently_playing_song_index + 1 < song_list.size()) {
+        currently_playing_song_index++;
+       
+    } else {
+        g_print("******************End of playlist=playing fromg begining******************\n");
+        currently_playing_song_index=0;
+        
+        
+    }
+     string filepath=folder_Path+"/" +song_list[currently_playing_song_index];
+     //   cout<<filepath<<endl;
+        play_audioFile(filepath,folder_Path);
+}

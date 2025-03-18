@@ -2,23 +2,27 @@
 #include "PlayAudio.h"
 
 vector<string> song_list; // Define the global song list
+string folder_Path;  // ✅ Define the global variable so that u can acces folder path ,when new song pressed from printplaylist
+
 static GstElement *playbin = NULL;
 
 
-static void play_selected_item(const char *file_path) {
+
+static void play_selected_item(string full_path,string folder_path) {
 	
+   // cout<<"inside play_slected_file:-passed folder_path value"<<folder_path<<endl;
 // Convert file_path and folder_path to string
 //check if selected item is song/video
-    if (g_str_has_suffix(file_path, ".mp3") ||
-        g_str_has_suffix(file_path, ".wav") ||
-        g_str_has_suffix(file_path, ".ogg"))
+    if (g_str_has_suffix(full_path.c_str(), ".mp3") ||
+        g_str_has_suffix(full_path.c_str(), ".wav") ||
+        g_str_has_suffix(full_path.c_str(), ".ogg"))
      {
      
         PlayAudio playAudio;
-       const string filePath(file_path);
+      // Create pipeline before playing
+      cout << "play_audioFile() called after opening folder with song: " << song_list[0] << endl;
 
-        playAudio.play_audioFile(filePath);
-        
+        playAudio.openFolderAndPlayFirstSong(full_path);
 
                     	
                     	
@@ -78,18 +82,25 @@ static void play_selected_item(const char *file_path) {
         } else {
             g_print("Failed to open the directory: %s\n", folder_path);
         }
-
+        cout<<"inside on_openFolder_clicked->folderpath="<<folder_path<<endl;
         // Play the first song in the playlist, if available
         if (!song_list.empty()) {
             currently_playing_song_index = 0;
-            std::string full_path = std::string(folder_path) + "/" + song_list[currently_playing_song_index];
+          string full_path = string(folder_path) + "/" + song_list[currently_playing_song_index];
           //  play_selected_item(full_path.c_str());
-           
+          
+         //  string folder_Path=string(folder_path);
+           folder_Path = string(folder_path);  // ✅ Use global variable
+
             // Create a C++ thread to play the selected item..bcz if not the next lines (printing vetor and closing file explorer doesn't happen)
-            std::thread play_thread([full_path]() {
-                play_selected_item(full_path.c_str());
+        //    / Create a C++ thread to play the selected item
+            std::thread play_thread([full_path]() { //no need to pass folder_path as its global inside openFolder.h and all files can use it
+                play_selected_item(full_path, folder_Path); // Pass by reference
             });
-            play_thread.detach(); // Detach the thread so it runs independently
+
+           
+
+                        play_thread.detach(); // Detach the thread so it runs independently
 
 
             g_print("Now playing: %s\n", full_path.c_str());
@@ -103,7 +114,7 @@ static void play_selected_item(const char *file_path) {
             g_print("  [%zu] %s\n", i, song_list[i].c_str());
         }
 
-        g_free(folder_path); // Free dynamically allocated memory
+       // g_free(folder_path); // Free dynamically allocated memory
     }
 
     gtk_widget_destroy(dialog); // Destroy the dialog after use

@@ -242,6 +242,11 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 ➡️ShowAudioFilesList
 	◾️seperate method in files printPlaylist.h and printPlaylist.cpp
 	◾️here as we know this uses song_list vector ..the contents to this vector  is filled inside  openfolder.cpp so include openfolder.h (in that song_list is defined as extern )
+	◾️Make the list items interactive using gtk_list_box_set_activate_on_single_click().
+	◾️ gtk_list_box_set_activate_on_single_click(list_box, TRUE); // Enable click activation
+    
+   ◾️ g_signal_connect(list_box, "row-activated", G_CALLBACK(on_row_activated), data)//// Connect the "row-activated" signal to the callback function
+	◾️ on_row_activated=to handle row activation (when a song is clicked)
 
 
 ➡️NNow in openFOlder.cpp 
@@ -379,13 +384,33 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 	◾️get msg  from bus
 	◾️    // Handle errors or end of stream (EOS)
 	◾️unref msg,bus;
+	◾️In your play_audioFile() function, this line is causing the issue:
+		msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE, 
+     	 static_cast<GstMessageType>(GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
+	◾️ this code used a blocking call to wait for messages on the GStreamer bus:
+	◾️It caused the program to block indefinitely until an error (GST_MESSAGE_ERROR) or end-of-stream (GST_MESSAGE_EOS) occurred,This froze the UI and prevented other interactions (such as updating the playlist or UI).
+
+	◾️This blocks execution until the song finishes playing (or an error occurs), preventing your UI (printplaylist )from responding.
+	◾️Replace=
+	the code uses a non-blocking approach with gst_bus_add_watch:
+	◾️Instead of blocking, it registers a callback function (on_message) that gets triggered when a message (error or EOS) is received.
+	◾️The program continues execution without freezing.
+	◾️When a song ends, on_message() automatically calls play_next() to play the next song.
+
+
+
 
 ➡️ openFolder.cpp
 use a thread for calling  =play_selected_item()  or else..it will block next line(print song vector,and file explorer window wont close)
 
 	
 
-
+➡️ for handling EOS inside playAudio.cpp
+◾️currently_playing_song_index=make it extern global
+◾️to use a same variable  one multiple files...we cant just make it global bcz.it will be only within that file...thats y make it extern
+◾️rules to make a variable extern and use it across multiple files
+	◾️Use the extern keyword in header files (e.g., x.h) to declare the variable. This tells the compiler that the variable exists, but it is defined elsewhere
+	◾️inside the .cpp file u need to declare it as ....int variable;
 
 
 

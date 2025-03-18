@@ -1,5 +1,27 @@
 #include "printPlaylist.h"
 
+#include "PlayAudio.h"
+
+#include "openFolder.h" // For currently_playing_song_index
+
+  PlayAudio playAudio;
+
+ void on_row_activated(GtkWidget *widget,GtkListBoxRow *row, gpointer data) {
+
+//cout<<"inside on_row_activated()"<<endl;
+// Get the index of the activated row
+    int index = gtk_list_box_row_get_index(row);
+    cout << "Song index clicked: " << index << endl;
+
+ if (index >= 0 && index < song_list.size()) {
+        string selected_song = song_list[index];
+        cout << "Playing: " << selected_song << endl;
+        cout << "Folder path: " << folder_Path << endl;
+        string Filepath=folder_Path+"/"+selected_song;
+       playAudio.play_audioFile(Filepath,folder_Path);
+    }
+ }
+
 // Function to show the audio files list
  void ShowAudioFilesList(GtkWidget *widget, gpointer data) {
 GtkWidget *dialog;
@@ -30,6 +52,9 @@ GtkWidget *dialog;
     // Create a GtkListBox to display the playlist
     list_box = gtk_list_box_new();
     gtk_container_add(GTK_CONTAINER(scrolled_window), list_box);
+     gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(list_box), TRUE); // Enable click activation
+// Connect the "row-activated" signal to the callback function
+   g_signal_connect(list_box, "row-activated", G_CALLBACK(on_row_activated), data);
 
     // Add each audio file in the playlist to the list box
     for (const string &song : song_list) {

@@ -11,6 +11,9 @@
 
 #include <gst/gst.h>
 using namespace std;
+
+extern  int currently_playing_song_index; 
+
 class PlayAudio
 {
 private:
@@ -25,9 +28,15 @@ private:
 public:
 	PlayAudio();
 	~PlayAudio();
-	// Method to play the selected file
-	void play_audioFile(const string &file_path);
+	
+     void openFolderAndPlayFirstSong(const std::string& folder_path);
+
+
+	void play_audioFile(const string &file_path,const string& folder_path);
 	static void on_pad_added(GstElement* element,GstPad* pad,gpointer user_data);
+	void play_next();//folderpath is global no need to pass
+	    static gboolean on_message(GstBus*, GstMessage*, gpointer);
+
 
 
 };

@@ -69,7 +69,11 @@ int main(int argc, char *argv[]) {
    GtkWidget *second_label = gtk_label_new("Second Partition");
     gtk_box_pack_start(GTK_BOX(second_partition), second_label, TRUE, TRUE, 0); // Add the label to the second partition
 
-   // Create THE 3RD PARTITON
+
+    //create playback parttion -play,pause,stop
+    //GtkWidget *playback_partition
+
+   // Create THE features PARTITON
    GtkWidget *features_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
@@ -97,6 +101,7 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
   // Add the  folderbox,featurebox and second box  to the vbox (vertical box)
     gtk_box_pack_start(GTK_BOX(vbox), folderBox, FALSE, FALSE, 0); // Add label to the top partition
     gtk_box_pack_start(GTK_BOX(vbox), second_partition, TRUE, TRUE, 0); // Add empty second partition
+
     gtk_box_pack_start(GTK_BOX(vbox), features_box, FALSE, FALSE, 0); // Add button to the bottom partition
 
     // Add the vbox to the window
