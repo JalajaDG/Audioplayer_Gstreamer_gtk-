@@ -12,11 +12,15 @@
 #include <gst/gst.h>
 using namespace std;
 
+
+
 extern  int currently_playing_song_index; 
 
 class PlayAudio
 {
 private:
+	    static PlayAudio* instance;  // Singleton instance
+
     GstElement *pipeline; // GStreamer pipeline	
 	GstElement *filesrc;           // File source element
     GstElement *decodebin;        // Decoder element
@@ -28,8 +32,10 @@ private:
 public:
 	PlayAudio();
 	~PlayAudio();
+	static PlayAudio* getInstance();  // Access Singleton instance
 	
      void openFolderAndPlayFirstSong(const std::string& folder_path);
+    GstElement* getPipeline() { return pipeline; } // Add this line to expose the pipeline
 
 
 	void play_audioFile(const string &file_path,const string& folder_path);

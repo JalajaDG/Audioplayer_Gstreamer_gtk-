@@ -1,8 +1,17 @@
 #include "openFolder.h" //for currently_playing_song_index & folder_path
 
 #include "PlayAudio.h"
+#include "pause.h"
 int currently_playing_song_index;
+PlayAudio* PlayAudio::instance = nullptr;  // Initialize singleton instance
 
+// Singleton access method
+PlayAudio* PlayAudio::getInstance() {
+    if (instance == nullptr) {
+        instance = new PlayAudio();
+    }
+    return instance;
+}
  PlayAudio::PlayAudio()
  {
    //initialize gstreamer
@@ -173,67 +182,39 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
 }
 
 
-void PlayAudio::play_audioFile(const string &file_path,const string& folder_path)
+void PlayAudio::play_audioFile(const string &file_path, const string &folder_path)
 {
-    cout << "Coming inside PlayAudio::playfile =" << folder_path << endl;
+    PlayAudio* instance = PlayAudio::getInstance();  // Use singleton instance
+
+    cout << "Coming inside PlayAudio::playfile = " << folder_path << endl;
 
     // **STOP the currently playing stream before starting a new one**
-    if (pipeline) {
-        gst_element_set_state(pipeline, GST_STATE_NULL);
-        gst_object_unref(pipeline);  // Free pipeline resources
-        pipeline = NULL;
+    if (instance->pipeline) {
+        gst_element_set_state(instance->pipeline, GST_STATE_NULL);
         g_print("Previous song completely stopped.\n");
     }
 
-    // Reinitialize the pipeline and elements
-    pipeline = gst_pipeline_new("audio-pipeline");
-    if (!pipeline) {
-        g_printerr("Failed to create audio pipeline\n");
+    // Set the file path in the existing filesrc instead of recreating pipeline
+    if (instance->filesrc) {
+        g_object_set(instance->filesrc, "location", file_path.c_str(), NULL);
+    } else {
+        g_printerr("Error: filesrc is NULL\n");
         return;
     }
 
-    filesrc = gst_element_factory_make("filesrc", "filesrc");
-    decodebin = gst_element_factory_make("decodebin", "decodebin");
-    audioconvert = gst_element_factory_make("audioconvert", "audioconvert");
-    audioresample = gst_element_factory_make("audioresample", "audioresample");
-    autoaudiosink = gst_element_factory_make("autoaudiosink", "autoaudiosink");
-
-    if (!filesrc || !decodebin || !audioconvert || !audioresample || !autoaudiosink) {
-        g_printerr("Failed to create one or more audio pipeline elements.\n");
-        return;
-    }
-
-    gst_bin_add_many(GST_BIN(pipeline), filesrc, decodebin, audioconvert, audioresample, autoaudiosink, NULL);
-
-    if (!gst_element_link(filesrc, decodebin)) {
-        g_printerr("Failed to link audio elements = source and decodebin\n");
-        return;
-    }
-
-    g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
-
-    if (!gst_element_link_many(audioconvert, audioresample, autoaudiosink, NULL)) {
-        g_printerr("Failed to link audio elements = audioconvert, audioresample, and sink\n");
-        return;
-    }
-
-    cout << "Setting file path: " << file_path.c_str() << endl;
-    g_object_set(filesrc, "location", file_path.c_str(), NULL);
-
-    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    // Set pipeline state to playing
+    GstStateChangeReturn ret = gst_element_set_state(instance->pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_printerr("Error while changing pipeline state to PLAYING\n");
         return;
     }
-    GstBus *bus = gst_element_get_bus(pipeline);
 
-// Attach a watch function to handle messages asynchronously ..otherwise it bloacks printplaylist dialog when playin song if gst_pop_filter used
-gst_bus_add_watch(bus, (GstBusFunc)on_message, this);
-gst_object_unref(bus);
-
-
-    
+    GstBus *bus = gst_element_get_bus(instance->pipeline);
+    gst_bus_add_watch(bus, (GstBusFunc)on_message, instance);
+    gst_object_unref(bus);
 }
+
+
 
 
 void PlayAudio::play_next()

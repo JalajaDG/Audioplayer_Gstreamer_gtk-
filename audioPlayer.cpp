@@ -15,6 +15,7 @@
 #include <gst/gst.h>
 
 //seprated files
+#include "pause.h"
 
 #include "openFolder.h" 
 #include "printPlaylist.h"
@@ -75,7 +76,10 @@ int main(int argc, char *argv[]) {
 
    // Create THE features PARTITON
    GtkWidget *features_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);
+GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+
+GtkWidget *pauseIcon = gtk_button_new_from_icon_name("media-playback-pause", GTK_ICON_SIZE_SMALL_TOOLBAR);
+
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
 
         // Store the song_list in the window data=bcz we need to pass this song_list vector to another function
@@ -84,14 +88,14 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 
 
        g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
- 
+         g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
 
 
 
 
     // Add icon  to the features box
     gtk_box_pack_start(GTK_BOX(features_box), ShowAudioFilesIcon, FALSE, FALSE, 0);  // Expand label
-
+ gtk_box_pack_start(GTK_BOX(features_box), pauseIcon, FALSE, FALSE, 0);
    
    // Add label and button to the folder box
     gtk_box_pack_start(GTK_BOX(folderBox), label, TRUE, TRUE, 0);  // Expand label
