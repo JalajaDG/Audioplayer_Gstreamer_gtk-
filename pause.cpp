@@ -32,10 +32,13 @@ void toggle_pause(GtkWidget *widget, gpointer data) {
     if (state == GST_STATE_PLAYING) {
         std::cout << "Pausing audio..." << std::endl;
         gst_element_set_state(pipeline, GST_STATE_PAUSED);
+        update_pause_icon(widget, false);  // show ▶️
+
     } 
     else if (state == GST_STATE_PAUSED) {
         std::cout << "Resuming audio..." << std::endl;
         gst_element_set_state(pipeline, GST_STATE_PLAYING);
+        update_pause_icon(widget, true);   // show ⏸️
     } else {
         std::cerr << "Pipeline is not in a valid state to pause or play!" << std::endl;
     }
@@ -43,4 +46,16 @@ void toggle_pause(GtkWidget *widget, gpointer data) {
     // Verify state after attempting to change it
     gst_element_get_state(pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
     std::cout << "State after request: " << state << std::endl;
+}
+
+// Change button icon based on playing state
+void update_pause_icon(GtkWidget *pauseIcon, bool isPlaying) {
+    if (!pauseIcon) return;
+
+    GtkWidget *image = gtk_image_new_from_icon_name(
+        isPlaying ? "media-playback-pause" : "media-playback-start",
+        GTK_ICON_SIZE_BUTTON
+    );
+
+    gtk_button_set_image(GTK_BUTTON(pauseIcon), image);
 }

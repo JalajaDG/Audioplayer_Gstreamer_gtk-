@@ -7,4 +7,7 @@
 
 void toggle_pause(GtkWidget *widget, gpointer data);
 
+// Update button icon (true = playing, false = paused)
+void update_pause_icon(GtkWidget *pauseIcon, bool isPlaying);
+
 #endif  // PAUSE_H

@@ -33,12 +33,13 @@ public:
 	PlayAudio();
 	~PlayAudio();
 	static PlayAudio* getInstance();  // Access Singleton instance
-	
+	bool isPlaying();
+
      void openFolderAndPlayFirstSong(const std::string& folder_path);
     GstElement* getPipeline() { return pipeline; } // Add this line to expose the pipeline
 
 
-	void play_audioFile(const string &file_path,const string& folder_path);
+	void play_audioFile(const string &file_path,const string& folder_path,GtkWidget* window);
 	static void on_pad_added(GstElement* element,GstPad* pad,gpointer user_data);
 	void play_next();//folderpath is global no need to pass
 	    static gboolean on_message(GstBus*, GstMessage*, gpointer);

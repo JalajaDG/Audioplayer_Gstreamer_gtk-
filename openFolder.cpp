@@ -26,7 +26,7 @@ static void play_selected_item(string full_path,string folder_path, GtkWidget *w
     // Update UI label with song name (filename only)
 
     GtkWidget *song_label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
-    cout<<"$$$fullpath=="<<full_path<<endl;
+ 
     if (song_label) {
     // Use the filename directly from song_list
     std::string filename = song_list[currently_playing_song_index];

@@ -3,8 +3,9 @@
 #include "PlayAudio.h"
 
 #include "openFolder.h" // For currently_playing_song_index
+#include "pause.h"  
 
-  PlayAudio playAudio;
+ 
 
  void on_row_activated(GtkWidget *widget,GtkListBoxRow *row, gpointer data) {
 
@@ -21,7 +22,9 @@ GtkWidget *window = GTK_WIDGET(data);   // ✅ fix: extract window from gpointer
         cout << "Playing: " << selected_song << endl;
         cout << "Folder path: " << folder_Path << endl;
         string Filepath=folder_Path+"/"+selected_song;
-       playAudio.play_audioFile(Filepath,folder_Path);
+       //playAudio.play_audioFile(Filepath,folder_Path);
+       PlayAudio* player = PlayAudio::getInstance();
+        player->play_audioFile(Filepath, folder_Path,window);
     }
   // ✅ update global index
         currently_playing_song_index = index;
@@ -34,6 +37,8 @@ GtkWidget *window = GTK_WIDGET(data);   // ✅ fix: extract window from gpointer
         } else {
             cout << "⚠️ song_label not found in window!" << endl;
         }
+
+     
 
         
     }

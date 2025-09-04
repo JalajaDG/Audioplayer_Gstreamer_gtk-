@@ -82,6 +82,10 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 
 GtkWidget *pauseIcon = gtk_button_new_from_icon_name("media-playback-pause", GTK_ICON_SIZE_SMALL_TOOLBAR);
 
+// Store pause button in window for later use
+g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
+
+
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
 
         // Store the song_list in the window data=bcz we need to pass this song_list vector to another function
@@ -90,7 +94,7 @@ GtkWidget *pauseIcon = gtk_button_new_from_icon_name("media-playback-pause", GTK
 
 
        g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
-       //  g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
+        g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
 
 
 

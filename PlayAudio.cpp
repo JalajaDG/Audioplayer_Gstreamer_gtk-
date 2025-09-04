@@ -25,6 +25,7 @@ PlayAudio* PlayAudio::getInstance() {
      g_printerr("Failed to create audio pipeline ");
      return;
     }
+  
  
         // Create the GStreamer elements
    filesrc=gst_element_factory_make("filesrc","filesrc");
@@ -182,7 +183,7 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
 }
 
 
-void PlayAudio::play_audioFile(const string &file_path, const string &folder_path)
+void PlayAudio::play_audioFile(const string &file_path, const string &folder_path,GtkWidget* window)
 {
     PlayAudio* instance = PlayAudio::getInstance();  // Use singleton instance
 
@@ -208,12 +209,33 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
         g_printerr("Error while changing pipeline state to PLAYING\n");
         return;
     }
+   
+// ✅ Update pause icon using window
+    GtkWidget* pauseButton = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "pause_button"));
+    if (pauseButton) {
+        GtkWidget *image = gtk_image_new_from_icon_name(
+            "media-playback-pause", GTK_ICON_SIZE_SMALL_TOOLBAR
+        );
+        gtk_button_set_image(GTK_BUTTON(pauseButton), image);
+    }
+
+
+
+  
 
     GstBus *bus = gst_element_get_bus(instance->pipeline);
     gst_bus_add_watch(bus, (GstBusFunc)on_message, instance);
     gst_object_unref(bus);
 }
 
+
+bool PlayAudio::isPlaying() {
+    if (!pipeline) return false;
+
+    GstState state;
+    gst_element_get_state(pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
+    return (state == GST_STATE_PLAYING);
+}
 
 
 
@@ -230,5 +252,5 @@ void PlayAudio::play_next()
     }
      string filepath=folder_Path+"/" +song_list[currently_playing_song_index];
      //   cout<<filepath<<endl;
-        play_audioFile(filepath,folder_Path);
+    //    play_audioFile(filepath,folder_Path,window);
 }
