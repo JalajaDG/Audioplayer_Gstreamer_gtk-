@@ -67,8 +67,10 @@ int main(int argc, char *argv[]) {
     
     // Create the second partition (empty for now)
     GtkWidget *second_partition = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-   GtkWidget *second_label = gtk_label_new("Second Partition");
-    gtk_box_pack_start(GTK_BOX(second_partition), second_label, TRUE, TRUE, 0); // Add the label to the second partition
+   GtkWidget *songLabel = gtk_label_new("No song playing yet");
+   g_object_set_data(G_OBJECT(window), "songLabel", songLabel);
+
+    gtk_box_pack_start(GTK_BOX(second_partition), songLabel, TRUE, TRUE, 0); // Add the label to the second partition
 
 
     //create playback parttion -play,pause,stop

@@ -8,7 +8,7 @@ static GstElement *playbin = NULL;
 
 
 
-static void play_selected_item(string full_path,string folder_path) {
+static void play_selected_item(string full_path,string folder_path, GtkWidget *window) {
 	
    // cout<<"inside play_slected_file:-passed folder_path value"<<folder_path<<endl;
 // Convert file_path and folder_path to string
@@ -18,11 +18,25 @@ static void play_selected_item(string full_path,string folder_path) {
         g_str_has_suffix(full_path.c_str(), ".ogg"))
      {
      
-         PlayAudio *player = PlayAudio::getInstance();   // ✅ use singleton
+        PlayAudio *player = PlayAudio::getInstance();   // ✅ use singleton
         g_print("Playing first song: %s\n", full_path.c_str());
         player->openFolderAndPlayFirstSong(full_path);
 
-                    	
+
+    // Update UI label with song name (filename only)
+
+    GtkWidget *song_label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
+    cout<<"$$$fullpath=="<<full_path<<endl;
+    if (song_label) {
+    // Use the filename directly from song_list
+    std::string filename = song_list[currently_playing_song_index];
+    cout << "Now playing (from vector): " << filename << endl;
+
+    // Update GTK label
+    gtk_label_set_text(GTK_LABEL(song_label), filename.c_str());
+} else {
+    cout << "⚠️ song_label not found in window!" << endl;
+}
                     	
       }
   
@@ -34,6 +48,7 @@ static void play_selected_item(string full_path,string folder_path) {
 
 // Callback function when the button is clicked
  void on_openFolder_clicked(GtkWidget *widget, gpointer data) {
+    //here  gpointer data is window passed
     GtkWidget *dialog;
     GtkWidget *window = GTK_WIDGET(data);
 
@@ -92,8 +107,8 @@ static void play_selected_item(string full_path,string folder_path) {
 
             // Create a C++ thread to play the selected item..bcz if not the next lines (printing vetor and closing file explorer doesn't happen)
         //    / Create a C++ thread to play the selected item
-            std::thread play_thread([full_path]() { //no need to pass folder_path as its global inside openFolder.h and all files can use it
-                play_selected_item(full_path, folder_Path); // Pass by reference
+            std::thread play_thread([full_path,window]() { //no need to pass folder_path as its global inside openFolder.h and all files can use it
+                play_selected_item(full_path, folder_Path,window); // Pass by reference
             });
 
            

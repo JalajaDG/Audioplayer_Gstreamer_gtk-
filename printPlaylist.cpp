@@ -10,17 +10,32 @@
 
 //cout<<"inside on_row_activated()"<<endl;
 // Get the index of the activated row
+GtkWidget *window = GTK_WIDGET(data);   // ✅ fix: extract window from gpointer
+   // Get the index of the activated row
     int index = gtk_list_box_row_get_index(row);
     cout << "Song index clicked: " << index << endl;
+    string selected_song;   
 
  if (index >= 0 && index < song_list.size()) {
-        string selected_song = song_list[index];
+         selected_song = song_list[index];
         cout << "Playing: " << selected_song << endl;
         cout << "Folder path: " << folder_Path << endl;
         string Filepath=folder_Path+"/"+selected_song;
        playAudio.play_audioFile(Filepath,folder_Path);
     }
- }
+  // ✅ update global index
+        currently_playing_song_index = index;
+
+        // ✅ Update GTK label
+        GtkWidget *song_label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
+        if (song_label) {
+            gtk_label_set_text(GTK_LABEL(song_label), selected_song.c_str());
+            cout << "Now playing (from vector): " << selected_song << endl;
+        } else {
+            cout << "⚠️ song_label not found in window!" << endl;
+        }
+    }
+ 
 
 // Function to show the audio files list
  void ShowAudioFilesList(GtkWidget *widget, gpointer data) {
@@ -30,6 +45,7 @@ GtkWidget *dialog;
     GtkWidget *list_box;
 
     GtkWidget *window = GTK_WIDGET(data);
+
 
     // Create a dialog to display the audio files
     dialog = gtk_dialog_new_with_buttons("Audio Files",
@@ -61,6 +77,8 @@ GtkWidget *dialog;
         GtkWidget *label = gtk_label_new(song.c_str());
         gtk_list_box_insert(GTK_LIST_BOX(list_box), label, -1);
     }
+
+   
 
     // Show all widgets in the dialog
     gtk_widget_show_all(dialog);

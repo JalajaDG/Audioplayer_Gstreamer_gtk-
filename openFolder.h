@@ -11,7 +11,7 @@
 using namespace std;
 
 // Declare the function
-  static void play_selected_item(string &file_path,string  &folder_path);
+  static void play_selected_item(string &file_path,string  &folder_path, GtkWidget *window);
  void on_openFolder_clicked(GtkWidget *widget, gpointer data);
  
 extern int currently_playing_song_index; // Global index for the currently playing song //-1 =no song playing
