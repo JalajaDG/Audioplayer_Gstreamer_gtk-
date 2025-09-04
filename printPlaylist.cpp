@@ -34,6 +34,8 @@ GtkWidget *window = GTK_WIDGET(data);   // ✅ fix: extract window from gpointer
         } else {
             cout << "⚠️ song_label not found in window!" << endl;
         }
+
+        
     }
  
 
@@ -78,6 +80,20 @@ GtkWidget *dialog;
         gtk_list_box_insert(GTK_LIST_BOX(list_box), label, -1);
     }
 
+
+     // ✅ Highlight currently playing song if available
+    if (currently_playing_song_index >= 0 &&
+        currently_playing_song_index < (int)song_list.size()) {
+
+        GtkListBoxRow *row = gtk_list_box_get_row_at_index(GTK_LIST_BOX(list_box),
+                                                           currently_playing_song_index);
+        if (row) {
+            gtk_list_box_select_row(GTK_LIST_BOX(list_box), row);
+
+            // Also ensure it’s visible if the list is long
+            gtk_widget_grab_focus(GTK_WIDGET(row));
+        }
+    }
    
 
     // Show all widgets in the dialog
