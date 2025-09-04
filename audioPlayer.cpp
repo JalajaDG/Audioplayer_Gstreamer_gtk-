@@ -88,7 +88,7 @@ GtkWidget *pauseIcon = gtk_button_new_from_icon_name("media-playback-pause", GTK
 
 
        g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
-         g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
+       //  g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
 
 
 

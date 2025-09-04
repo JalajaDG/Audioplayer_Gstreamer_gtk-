@@ -18,11 +18,9 @@ static void play_selected_item(string full_path,string folder_path) {
         g_str_has_suffix(full_path.c_str(), ".ogg"))
      {
      
-        PlayAudio playAudio;
-      // Create pipeline before playing
-      cout << "play_audioFile() called after opening folder with song: " << song_list[0] << endl;
-
-        playAudio.openFolderAndPlayFirstSong(full_path);
+         PlayAudio *player = PlayAudio::getInstance();   // ✅ use singleton
+        g_print("Playing first song: %s\n", full_path.c_str());
+        player->openFolderAndPlayFirstSong(full_path);
 
                     	
                     	
@@ -76,7 +74,7 @@ static void play_selected_item(string full_path,string folder_path) {
             }
             
    	 // Sort the song_list alphabetically
-   	// sort(song_list.begin(), song_list.end());
+   	 sort(song_list.begin(), song_list.end());
 
             g_dir_close(dir);
         } else {
