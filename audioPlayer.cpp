@@ -7,6 +7,8 @@
 
 // g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
 // g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp pause.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0` 
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp pause.cpp seek.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
 
 #include<iostream>
 #include <gtk/gtk.h>
@@ -20,6 +22,7 @@
 #include "openFolder.h" 
 #include "printPlaylist.h"
 #include "PlayAudio.h"
+#include "seek.h"
 
 #include<algorithm> //for sort
 using namespace std;
@@ -71,6 +74,35 @@ int main(int argc, char *argv[]) {
    g_object_set_data(G_OBJECT(window), "songLabel", songLabel);
 
     gtk_box_pack_start(GTK_BOX(second_partition), songLabel, TRUE, TRUE, 0); // Add the label to the second partition
+// --- Create a seek box (slider) ---
+GtkWidget *seekBox = gtk_scale_new_with_range(
+    GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0); // min=0, max=100, step=1
+gtk_scale_set_draw_value(GTK_SCALE(seekBox), FALSE); // Don't show numeric value
+gtk_widget_set_hexpand(seekBox, TRUE);               // Expand to fill width
+
+// Store seekBox in window for later use
+g_object_set_data(G_OBJECT(window), "seek_box", seekBox);
+
+
+
+
+// --- Create current time and total duration labels ---
+GtkWidget *current_time_label = gtk_label_new("00:00");
+GtkWidget *total_time_label = gtk_label_new("00:00");
+// Store labels in window for later use
+g_object_set_data(G_OBJECT(window), "current_time_label", current_time_label);
+g_object_set_data(G_OBJECT(window), "total_time_label", total_time_label);
+
+
+
+//seek_box(conatins current time,seekbar,total time)
+GtkWidget *seek_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+// Add labels and seekbox to the horizontal box
+gtk_box_pack_start(GTK_BOX(seek_hbox), current_time_label, FALSE, FALSE, 5);
+gtk_box_pack_start(GTK_BOX(seek_hbox), seekBox, TRUE, TRUE, 5);
+gtk_box_pack_start(GTK_BOX(seek_hbox), total_time_label, FALSE, FALSE, 5);
+
+
 
 
     //create playback parttion -play,pause,stop
@@ -95,6 +127,8 @@ g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
 
        g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
         g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
+        g_signal_connect(seekBox, "value-changed", G_CALLBACK(on_seek_changed), window); //connect the seekbar
+
 
 
 
@@ -111,6 +145,7 @@ g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
   // Add the  folderbox,featurebox and second box  to the vbox (vertical box)
     gtk_box_pack_start(GTK_BOX(vbox), folderBox, FALSE, FALSE, 0); // Add label to the top partition
     gtk_box_pack_start(GTK_BOX(vbox), second_partition, TRUE, TRUE, 0); // Add empty second partition
+    gtk_box_pack_start(GTK_BOX(vbox), seek_hbox, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox), features_box, FALSE, FALSE, 0); // Add button to the bottom partition
 
@@ -123,6 +158,9 @@ g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
 
     // Show the window
     gtk_widget_show_all(window);
+    
+    // Start updating seekbar and time labels every 0.5s
+g_timeout_add(500, (GSourceFunc)update_seek_position, window);
 
     // Start the GTK main event loop
     gtk_main();
