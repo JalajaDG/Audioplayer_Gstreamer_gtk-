@@ -23,7 +23,7 @@
 #include "printPlaylist.h"
 #include "PlayAudio.h"
 #include "seek.h"
-
+#include "seekForward.h"
 #include<algorithm> //for sort
 using namespace std;
 static char *folder_path;
@@ -117,6 +117,10 @@ GtkWidget *pauseIcon = gtk_button_new_from_icon_name("media-playback-pause", GTK
 // Store pause button in window for later use
 g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
 
+   //forward-seek
+    GtkWidget *skip_forward=gtk_button_new_from_icon_name("media-skip-forward",GTK_ICON_SIZE_SMALL_TOOLBAR); //gtk3-icon-browser
+    // Store skip_forward button in window for later use
+    g_object_set_data(G_OBJECT(window),"skip_forward",skip_forward);
 
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
 
@@ -128,6 +132,7 @@ g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
        g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
         g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
         g_signal_connect(seekBox, "value-changed", G_CALLBACK(on_seek_changed), window); //connect the seekbar
+        g_signal_connect(skip_forward,"clicked",G_CALLBACK(on_skip_forward_clicked),window); //connect the skip_forward button with its function
 
 
 
@@ -136,6 +141,7 @@ g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
     // Add icon  to the features box
     gtk_box_pack_start(GTK_BOX(features_box), ShowAudioFilesIcon, FALSE, FALSE, 0);  // Expand label
  gtk_box_pack_start(GTK_BOX(features_box), pauseIcon, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box),skip_forward,FALSE,FALSE,0);
    
    // Add label and button to the folder box
     gtk_box_pack_start(GTK_BOX(folderBox), label, TRUE, TRUE, 0);  // Expand label
