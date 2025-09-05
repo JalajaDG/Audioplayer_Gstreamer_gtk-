@@ -11,7 +11,10 @@
 
 //cout<<"inside on_row_activated()"<<endl;
 // Get the index of the activated row
-GtkWidget *window = GTK_WIDGET(data);   // ✅ fix: extract window from gpointer
+
+   PlaylistData *pdata = (PlaylistData *)data;
+    GtkWidget *window = pdata->window;
+    GtkWidget *dialog = pdata->dialog;
    // Get the index of the activated row
     int index = gtk_list_box_row_get_index(row);
     cout << "Song index clicked: " << index << endl;
@@ -39,6 +42,8 @@ GtkWidget *window = GTK_WIDGET(data);   // ✅ fix: extract window from gpointer
         }
 
      
+    // ✅ Close the dialog immediately
+    gtk_widget_destroy(dialog);
 
         
     }
@@ -76,8 +81,13 @@ GtkWidget *dialog;
     list_box = gtk_list_box_new();
     gtk_container_add(GTK_CONTAINER(scrolled_window), list_box);
      gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(list_box), TRUE); // Enable click activation
+
+
+// Pass both window and dialog via struct
+PlaylistData *pdata = new PlaylistData{window, dialog};
+
 // Connect the "row-activated" signal to the callback function
-   g_signal_connect(list_box, "row-activated", G_CALLBACK(on_row_activated), data);
+   g_signal_connect(list_box, "row-activated", G_CALLBACK(on_row_activated), pdata);
 
     // Add each audio file in the playlist to the list box
     for (const string &song : song_list) {

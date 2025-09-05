@@ -10,7 +10,13 @@
 
 #include "openFolder.h"  //to use song_list vector ie is declared as extern in openFolder.h and that vector is filled in openFolder.cpp
 
+
 using namespace std;
+struct PlaylistData {
+    GtkWidget* window;
+    GtkWidget* dialog;
+};
+
 
 void ShowAudioFilesList(GtkWidget *widget, gpointer data);
 
