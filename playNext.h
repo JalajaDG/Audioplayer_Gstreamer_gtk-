@@ -3,6 +3,6 @@
 
 #include <gtk/gtk.h>
 
-extern "C" void on_play_next_clicked(GtkWidget *widget, gpointer data);
+void on_play_next_clicked(GtkWidget *widget, gpointer data);
 
 #endif
