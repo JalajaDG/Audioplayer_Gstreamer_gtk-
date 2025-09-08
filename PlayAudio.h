@@ -29,6 +29,8 @@ private:
     GstElement *autoaudiosink;             // Audio output element
 	GstBus *bus;
 	GstMessage* msg;
+	GtkWidget* main_window = nullptr;  // Store reference to main GTK window
+
 public:
 	PlayAudio();
 	~PlayAudio();
@@ -43,8 +45,11 @@ public:
 	static void on_pad_added(GstElement* element,GstPad* pad,gpointer user_data);
 	void play_next();//folderpath is global no need to pass
 	    static gboolean on_message(GstBus*, GstMessage*, gpointer);
+		void handleEOS(GtkWidget* window);
 
-
+	  // ✅ Add these setter and getter for main_window
+    void setMainWindow(GtkWidget* window) { main_window = window; }
+    GtkWidget* getMainWindow() const { return main_window; }
 
 };
 #endif  //PLAYAUDIO_H

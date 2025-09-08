@@ -68,9 +68,7 @@ PlayAudio* PlayAudio::getInstance() {
      return;
     }
  
- 
- 
- 
+
  
  }
 //destructor
@@ -125,6 +123,8 @@ void PlayAudio::  on_pad_added(GstElement* element,GstPad* pad,gpointer user_dat
 
 gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data) {
     PlayAudio *self = static_cast<PlayAudio*>(user_data);
+  GtkWidget* window = self->getMainWindow(); // retrieve window
+
 
     switch (GST_MESSAGE_TYPE(msg)) {
         case GST_MESSAGE_ERROR: {
@@ -144,7 +144,7 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
         }
         case GST_MESSAGE_EOS:
             g_print("******************End of stream. Playing next song******************\n");
-           self->play_next();
+             self->handleEOS(window);  // Play next song and update UI
             break;
         default:
             break;
@@ -173,6 +173,12 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
     // Set the file path to the filesrc element's location property
     g_object_set(filesrc, "location", file_path.c_str(), NULL);
 
+
+//watch bus for end-of-stream
+      GstBus *bus = gst_element_get_bus(pipeline);           
+    gst_bus_add_watch(bus, (GstBusFunc)on_message, this);    
+    gst_object_unref(bus);    
+
     // Set pipeline state to playing
     GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE)
@@ -180,6 +186,7 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
         g_printerr("Error: Pipeline failed to change state to PLAYING\n");
         return;
     }
+  
 }
 
 
@@ -201,6 +208,12 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
     } else {
         g_printerr("Error: filesrc is NULL\n");
         return;
+    }
+
+    GtkWidget* songLabel = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
+    if (songLabel) {
+    std::string filename = file_path.substr(file_path.find_last_of("/\\") + 1);
+    gtk_label_set_text(GTK_LABEL(songLabel), filename.c_str());
     }
 
     // Set pipeline state to playing
@@ -225,6 +238,7 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
 
     GstBus *bus = gst_element_get_bus(instance->pipeline);
     gst_bus_add_watch(bus, (GstBusFunc)on_message, instance);
+
     gst_object_unref(bus);
 }
 
@@ -239,18 +253,32 @@ bool PlayAudio::isPlaying() {
 
 
 
-void PlayAudio::play_next()
-{
-    if (currently_playing_song_index + 1 < song_list.size()) {
-        currently_playing_song_index++;
+// void PlayAudio::play_next()
+// {
+//     if (currently_playing_song_index + 1 < song_list.size()) {
+//         currently_playing_song_index++;
        
-    } else {
-        g_print("******************End of playlist=playing fromg begining******************\n");
-        currently_playing_song_index=0;
+//     } else {
+//         g_print("******************End of playlist=playing fromg begining******************\n");
+//         currently_playing_song_index=0;
         
         
+//     }
+//      string filepath=folder_Path+"/" +song_list[currently_playing_song_index];
+//      //   cout<<filepath<<endl;
+//     //    play_audioFile(filepath,folder_Path,window);
+// }
+
+void PlayAudio::handleEOS(GtkWidget* window) {
+    // Move to next song
+    currently_playing_song_index++;
+    if (currently_playing_song_index >= song_list.size()) {
+        currently_playing_song_index = 0; // loop back to beginning
     }
-     string filepath=folder_Path+"/" +song_list[currently_playing_song_index];
-     //   cout<<filepath<<endl;
-    //    play_audioFile(filepath,folder_Path,window);
+
+    // Build next song file path
+    std::string next_file = folder_Path + "/" + song_list[currently_playing_song_index];
+
+    // Play the next song and update UI
+    play_audioFile(next_file, folder_Path, window);
 }

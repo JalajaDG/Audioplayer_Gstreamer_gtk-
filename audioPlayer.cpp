@@ -61,6 +61,10 @@ int main(int argc, char *argv[]) {
     gtk_window_set_default_size(GTK_WINDOW(window), 600, 400); // Set the size of the window
 
 
+    // Get the singleton instance
+    PlayAudio* player = PlayAudio::getInstance();
+   player->setMainWindow(window);   // <<< Set the main GTK window reference here
+
  // Create a vertical box to divide the window into two parts
     GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); // Vertical box with 10px spacing
     
