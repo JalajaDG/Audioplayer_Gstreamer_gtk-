@@ -6,12 +6,8 @@
 
 using namespace std;
 
-// extern variables from openFolder.cpp
-extern int currently_playing_song_index;
-extern vector<string> song_list;
-extern string folder_Path;
 
-extern "C" void on_play_next_clicked(GtkWidget *widget, gpointer data) {
+void on_play_next_clicked(GtkWidget *widget, gpointer data) {
     GtkWidget *window = GTK_WIDGET(data);
 
     if (song_list.empty()) {
