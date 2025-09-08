@@ -15,7 +15,8 @@ SRCS = audioPlayer.cpp \
        pause.cpp \
        seek.cpp \
        seekForward.cpp \
-       seekBackward.cpp
+       seekBackward.cpp \
+       playNext.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
