@@ -2,6 +2,7 @@
 
 #include "PlayAudio.h"
 #include "pause.h"
+#include "repeat.h"  
 int currently_playing_song_index;
 PlayAudio* PlayAudio::instance = nullptr;  // Initialize singleton instance
 
@@ -270,6 +271,15 @@ bool PlayAudio::isPlaying() {
 // }
 
 void PlayAudio::handleEOS(GtkWidget* window) {
+      std::string next_file;
+      if (repeat_mode) {
+        // Repeat current song (don’t increment index)
+        next_file = folder_Path + "/" + song_list[currently_playing_song_index];
+        g_print("Repeat mode ON → Replaying current song: %s\n", next_file.c_str());
+    }
+    else{
+
+    
     // Move to next song
     currently_playing_song_index++;
     if (currently_playing_song_index >= song_list.size()) {
@@ -277,8 +287,8 @@ void PlayAudio::handleEOS(GtkWidget* window) {
     }
 
     // Build next song file path
-    std::string next_file = folder_Path + "/" + song_list[currently_playing_song_index];
-
+   next_file = folder_Path + "/" + song_list[currently_playing_song_index];
+    }
     // Play the next song and update UI
     play_audioFile(next_file, folder_Path, window);
 }
