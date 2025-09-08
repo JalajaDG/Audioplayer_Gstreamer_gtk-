@@ -13,10 +13,15 @@ void on_repeat_clicked(GtkWidget *button, gpointer user_data) {
         GtkWidget *image = gtk_image_new_from_icon_name(
             "media-playlist-repeat-song-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
         gtk_button_set_image(GTK_BUTTON(button), image);
+         // Highlight the button (theme usually makes it blue/green)
+        gtk_style_context_add_class( gtk_widget_get_style_context(button),"suggested-action");
     } else {
         std::cout << "Repeat mode: OFF\n";
         GtkWidget *image = gtk_image_new_from_icon_name(
             "media-playlist-repeat-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
         gtk_button_set_image(GTK_BUTTON(button), image);
+        // Remove highlight
+         gtk_style_context_remove_class( gtk_widget_get_style_context(button),"suggested-action");
+
     }
 }
