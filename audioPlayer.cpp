@@ -31,6 +31,7 @@
 #include "playNext.h"
 #include "playPrev.h"
 #include "repeat.h"
+#include "shuffle.h"
 #include<algorithm> //for sort
 using namespace std;
 static char *folder_path;
@@ -127,6 +128,9 @@ GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume
 GtkWidget *repeatBtn = gtk_button_new_from_icon_name("media-playlist-repeat-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
 g_object_set_data(G_OBJECT(window), "repeat_button", repeatBtn);
 
+// Shuffle button
+GtkWidget *shuffleBtn = gtk_button_new_from_icon_name("media-playlist-shuffle-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+g_object_set_data(G_OBJECT(window), "shuffle_button", shuffleBtn);
 
 
 //play prev song
@@ -165,6 +169,7 @@ g_object_set_data(G_OBJECT(window),"play_next",play_next);
 
        g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
       g_signal_connect(repeatBtn, "clicked", G_CALLBACK(on_repeat_clicked), window);
+     g_signal_connect(shuffleBtn, "clicked", G_CALLBACK(on_shuffle_clicked), NULL);
         g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
         g_signal_connect(seekBox, "value-changed", G_CALLBACK(on_seek_changed), window); //connect the seekbar
         g_signal_connect(skip_forward,"clicked",G_CALLBACK(on_skip_forward_clicked),window); //connect the skip_forward button with its function
@@ -178,6 +183,8 @@ g_object_set_data(G_OBJECT(window),"play_next",play_next);
     // Add icon  to the features box
     gtk_box_pack_start(GTK_BOX(features_box), ShowAudioFilesIcon, FALSE, FALSE, 0);  // Expand label
     gtk_box_pack_start(GTK_BOX(features_box), repeatBtn, FALSE, FALSE, 0); 
+    gtk_box_pack_start(GTK_BOX(features_box), shuffleBtn, FALSE, FALSE, 2);
+
     gtk_box_pack_start(GTK_BOX(features_box),play_prev,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(features_box),skip_backward,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box), pauseIcon, FALSE, FALSE, 0);

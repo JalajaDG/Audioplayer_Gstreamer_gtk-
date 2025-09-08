@@ -3,6 +3,8 @@
 #include "PlayAudio.h"
 #include "pause.h"
 #include "repeat.h"  
+#include "shuffle.h"
+
 int currently_playing_song_index;
 PlayAudio* PlayAudio::instance = nullptr;  // Initialize singleton instance
 
@@ -271,24 +273,36 @@ bool PlayAudio::isPlaying() {
 // }
 
 void PlayAudio::handleEOS(GtkWidget* window) {
-      std::string next_file;
-      if (repeat_mode) {
-        // Repeat current song (don’t increment index)
+    std::string next_file;
+
+    if (repeat_mode) {
+        // Repeat current song regardless of shuffle
         next_file = folder_Path + "/" + song_list[currently_playing_song_index];
         g_print("Repeat mode ON → Replaying current song: %s\n", next_file.c_str());
-    }
-    else{
 
-    
-    // Move to next song
-    currently_playing_song_index++;
-    if (currently_playing_song_index >= song_list.size()) {
-        currently_playing_song_index = 0; // loop back to beginning
+    } else if (shuffle_mode) {
+        // Pick a random index different from current
+        if (song_list.size() > 1) {
+            int rand_index;
+            do {
+                rand_index = rand() % song_list.size();
+            } while (rand_index == currently_playing_song_index);
+
+            currently_playing_song_index = rand_index;
+        }
+        // else only one song, keep the same index
+        g_print("Shuffle mode ON → Playing random song index: %d\n", currently_playing_song_index);
+        next_file = folder_Path + "/" + song_list[currently_playing_song_index];
+
+    } else {
+        // Sequential next song
+        currently_playing_song_index++;
+        if (currently_playing_song_index >= song_list.size()) {
+            currently_playing_song_index = 0; // loop back to beginning
+        }
+        next_file = folder_Path + "/" + song_list[currently_playing_song_index];
     }
 
-    // Build next song file path
-   next_file = folder_Path + "/" + song_list[currently_playing_song_index];
-    }
-    // Play the next song and update UI
+    // Play the next song
     play_audioFile(next_file, folder_Path, window);
 }
