@@ -201,8 +201,11 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
 
     // **STOP the currently playing stream before starting a new one**
     if (instance->pipeline) {
-        gst_element_set_state(instance->pipeline, GST_STATE_NULL);
-        g_print("Previous song completely stopped.\n");
+        // gst_element_set_state(instance->pipeline, GST_STATE_NULL);
+        // g_print("Previous song completely stopped.\n");
+        gst_element_set_state(instance->pipeline, GST_STATE_READY);
+      g_print("Previous song reset to READY state.\n");
+
     }
 
     // Set the file path in the existing filesrc instead of recreating pipeline
@@ -212,6 +215,14 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
         g_printerr("Error: filesrc is NULL\n");
         return;
     }
+
+        // Reset seekbar and labels immediately
+   GtkWidget *seekBox = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "seek_box"));
+   GtkWidget *current_label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "current_time_label"));
+   GtkWidget *total_label   = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "total_time_label"));
+   if (seekBox) gtk_range_set_value(GTK_RANGE(seekBox), 0);
+   if (current_label) gtk_label_set_text(GTK_LABEL(current_label), "00:00");
+    if (total_label)   gtk_label_set_text(GTK_LABEL(total_label), "00:00");
 
     GtkWidget* songLabel = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
     if (songLabel) {
@@ -225,6 +236,8 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
         g_printerr("Error while changing pipeline state to PLAYING\n");
         return;
     }
+        // Optional: wait until pipeline is fully in PLAYING (ensures duration available)
+   gst_element_get_state(instance->pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
    
 // ✅ Update pause icon using window
     GtkWidget* pauseButton = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "pause_button"));
