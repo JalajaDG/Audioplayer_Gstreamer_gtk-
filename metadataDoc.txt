@@ -1,0 +1,78 @@
+# GStreamer Metadata Documentation (Notes)
+
+## 1. Metadata Types
+GStreamer supports two main types of metadata:
+
+1. **Stream Tags (Non-Technical)**
+   - Describe the *content* of a stream.
+   - Examples:
+     - Author / Artist
+     - Title (Song name)
+     - Album
+     - Genre
+     - Year
+     - Track number
+   - Handled through the **tagging system**.
+
+2. **Stream Info (Technical)**
+   - Describe the *technical properties* of a stream.
+   - Examples:
+     - Video size (e.g., 1920x1080)
+     - Audio sample rate (e.g., 44.1kHz)
+     - Codecs used (MP3, H.264, etc.)
+   - Retrieved from a `GstPad` via its negotiated `GstCaps`.
+
+---
+
+## 2. Metadata Reading
+
+### 2.1 Stream Info
+- Obtained from `GstPad` caps.
+- Requires access to all pads of the stream.
+
+### 2.2 Stream Tags
+- Delivered on the **bus** as `GST_MESSAGE_TAG` messages.
+- May be emitted multiple times → application must **aggregate** tags.
+
+#### Best Practices:
+- Use `gst_tag_list_merge()` to combine tags.
+- Empty the tag cache:
+  - On new song load
+  - Periodically (e.g., for internet radio)
+- Use `GST_TAG_MERGE_PREPEND` to ensure latest tags override older ones.
+
+---
+
+## 3. Example: Extracting Tags
+
+```c
+// Compile: gcc -o tags tags.c `pkg-config --cflags --libs gstreamer-1.0`
+#include <gst/gst.h>
+
+static void
+print_one_tag (const GstTagList *list, const gchar *tag, gpointer user_data) {
+  int i, num = gst_tag_list_get_tag_size(list, tag);
+  for (i = 0; i < num; ++i) {
+    const GValue *val = gst_tag_list_get_value_index(list, tag, i);
+    if (G_VALUE_HOLDS_STRING(val)) {
+      g_print("%20s : %s\n", tag, g_value_get_string(val));
+    } else if (G_VALUE_HOLDS_UINT(val)) {
+      g_print("%20s : %u\n", tag, g_value_get_uint(val));
+    } else if (G_VALUE_HOLDS_DOUBLE(val)) {
+      g_print("%20s : %g\n", tag, g_value_get_double(val));
+    } else if (G_VALUE_HOLDS_BOOLEAN(val)) {
+      g_print("%20s : %s\n", tag, g_value_get_boolean(val) ? "true" : "false");
+    } else if (GST_VALUE_HOLDS_BUFFER(val)) {
+      GstBuffer *buf = gst_value_get_buffer(val);
+      g_print("%20s : buffer of size %u\n", tag, gst_buffer_get_size(buf));
+    } else if (GST_VALUE_HOLDS_DATE_TIME(val)) {
+      GstDateTime *dt = g_value_get_boxed(val);
+      gchar *dt_str = gst_date_time_to_iso8601_string(dt);
+      g_print("%20s : %s\n", tag, dt_str);
+      g_free(dt_str);
+    } else {
+      g_print("%20s : tag of type '%s'\n", tag, G_VALUE_TYPE_NAME(val));
+    }
+  }
+}
+

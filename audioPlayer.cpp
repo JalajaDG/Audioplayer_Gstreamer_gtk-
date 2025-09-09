@@ -32,6 +32,7 @@
 #include "playPrev.h"
 #include "repeat.h"
 #include "shuffle.h"
+#include "metadata.h"
 #include<algorithm> //for sort
 using namespace std;
 static char *folder_path;
@@ -158,6 +159,12 @@ GtkWidget* play_next=gtk_button_new_from_icon_name("go-next",GTK_ICON_SIZE_SMALL
 g_object_set_data(G_OBJECT(window),"play_next",play_next);
 
 
+// Metadata button
+GtkWidget *metadataBtn = gtk_button_new_from_icon_name("dialog-information", GTK_ICON_SIZE_SMALL_TOOLBAR);
+g_object_set_data(G_OBJECT(window), "metadata_button", metadataBtn);
+
+
+
 
 
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
@@ -176,6 +183,7 @@ g_object_set_data(G_OBJECT(window),"play_next",play_next);
         g_signal_connect(skip_backward,"clicked",G_CALLBACK(on_skip_backward_clicked),window); //connect the skip_backward button with its function
        g_signal_connect(play_prev,"clicked",G_CALLBACK(on_play_prev_clicked),window); //connect playprev button with its function
       g_signal_connect(play_next,"clicked",G_CALLBACK(on_play_next_clicked),window); //connect play_next button with its function
+       g_signal_connect(metadataBtn, "clicked", G_CALLBACK(on_metadata_clicked), window);
 
 
 
@@ -190,6 +198,8 @@ g_object_set_data(G_OBJECT(window),"play_next",play_next);
  gtk_box_pack_start(GTK_BOX(features_box), pauseIcon, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box),skip_forward,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box),play_next,FALSE,FALSE,0);
+ gtk_box_pack_start(GTK_BOX(features_box), metadataBtn, FALSE, FALSE, 0);
+
    
    // Add label and button to the folder box
     gtk_box_pack_start(GTK_BOX(folderBox), label, TRUE, TRUE, 0);  // Expand label

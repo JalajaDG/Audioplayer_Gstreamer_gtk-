@@ -1,7 +1,7 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -Wall -g `pkg-config --cflags gtk+-3.0 gstreamer-1.0`
-LDFLAGS = `pkg-config --libs gtk+-3.0 gstreamer-1.0` -lpthread
+CXXFLAGS = -Wall -g `pkg-config --cflags gtk+-3.0 gstreamer-1.0 gstreamer-pbutils-1.0`
+LDFLAGS = `pkg-config --libs gtk+-3.0 gstreamer-1.0 gstreamer-pbutils-1.0` -lpthread
 
 
 # Executable name
@@ -19,7 +19,8 @@ SRCS = audioPlayer.cpp \
        playNext.cpp \
        playPrev.cpp \
        repeat.cpp \
-       shuffle.cpp
+       shuffle.cpp \
+       metadata.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
