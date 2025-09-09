@@ -33,6 +33,7 @@
 #include "repeat.h"
 #include "shuffle.h"
 #include "metadata.h"
+#include "theme.h"
 #include<algorithm> //for sort
 using namespace std;
 static char *folder_path;
@@ -163,6 +164,10 @@ g_object_set_data(G_OBJECT(window),"play_next",play_next);
 GtkWidget *metadataBtn = gtk_button_new_from_icon_name("dialog-information", GTK_ICON_SIZE_SMALL_TOOLBAR);
 g_object_set_data(G_OBJECT(window), "metadata_button", metadataBtn);
 
+//light mode button
+GtkWidget *themeBtn = gtk_button_new_from_icon_name("night-light-symbolic", GTK_ICON_SIZE_BUTTON);
+g_object_set_data(G_OBJECT(window), "themeBtn", themeBtn);
+
 
 
 
@@ -184,7 +189,7 @@ g_object_set_data(G_OBJECT(window), "metadata_button", metadataBtn);
        g_signal_connect(play_prev,"clicked",G_CALLBACK(on_play_prev_clicked),window); //connect playprev button with its function
       g_signal_connect(play_next,"clicked",G_CALLBACK(on_play_next_clicked),window); //connect play_next button with its function
        g_signal_connect(metadataBtn, "clicked", G_CALLBACK(on_metadata_clicked), window);
-
+    g_signal_connect(themeBtn, "clicked", G_CALLBACK(on_themeBtn_clicked), window);
 
 
 
@@ -199,6 +204,8 @@ g_object_set_data(G_OBJECT(window), "metadata_button", metadataBtn);
  gtk_box_pack_start(GTK_BOX(features_box),skip_forward,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box),play_next,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box), metadataBtn, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box), themeBtn, FALSE, FALSE, 0);
+
 
    
    // Add label and button to the folder box

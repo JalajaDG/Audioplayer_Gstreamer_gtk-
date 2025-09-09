@@ -20,7 +20,8 @@ SRCS = audioPlayer.cpp \
        playPrev.cpp \
        repeat.cpp \
        shuffle.cpp \
-       metadata.cpp
+       metadata.cpp \
+       theme.cpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)
