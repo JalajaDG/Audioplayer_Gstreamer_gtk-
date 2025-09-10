@@ -34,6 +34,7 @@
 #include "shuffle.h"
 #include "metadata.h"
 #include "theme.h"
+#include "sleepTimer.h"
 #include<algorithm> //for sort
 using namespace std;
 static char *folder_path;
@@ -168,6 +169,22 @@ g_object_set_data(G_OBJECT(window), "metadata_button", metadataBtn);
 GtkWidget *themeBtn = gtk_button_new_from_icon_name("night-light-symbolic", GTK_ICON_SIZE_BUTTON);
 g_object_set_data(G_OBJECT(window), "themeBtn", themeBtn);
 
+//sleep timer
+// Load and scale PNG image with GdkPixbuf
+GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale("icons/clock.png",
+                                                      24,  // width
+                                                      24,  // height
+                                                      TRUE, // preserve aspect ratio
+                                                      NULL);
+
+GtkWidget *sleepImage = gtk_image_new_from_pixbuf(pixbuf);
+g_object_unref(pixbuf); // free pixbuf after setting image
+
+
+// Create button and set the image
+GtkWidget *sleepTimerBtn = gtk_button_new();
+gtk_button_set_image(GTK_BUTTON(sleepTimerBtn), sleepImage);
+gtk_button_set_always_show_image(GTK_BUTTON(sleepTimerBtn), TRUE);
 
 
 
@@ -190,6 +207,8 @@ g_object_set_data(G_OBJECT(window), "themeBtn", themeBtn);
       g_signal_connect(play_next,"clicked",G_CALLBACK(on_play_next_clicked),window); //connect play_next button with its function
        g_signal_connect(metadataBtn, "clicked", G_CALLBACK(on_metadata_clicked), window);
     g_signal_connect(themeBtn, "clicked", G_CALLBACK(on_themeBtn_clicked), window);
+    g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
+
 
 
 
@@ -205,6 +224,8 @@ g_object_set_data(G_OBJECT(window), "themeBtn", themeBtn);
  gtk_box_pack_start(GTK_BOX(features_box),play_next,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box), metadataBtn, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), themeBtn, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBtn, FALSE, FALSE, 0);
+
 
 
    
