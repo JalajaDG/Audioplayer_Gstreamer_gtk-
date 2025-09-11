@@ -186,8 +186,16 @@ GtkWidget *sleepTimerBtn = gtk_button_new();
 gtk_button_set_image(GTK_BUTTON(sleepTimerBtn), sleepImage);
 gtk_button_set_always_show_image(GTK_BUTTON(sleepTimerBtn), TRUE);
 
+// Create label (initially hidden) to show timer state
+GtkWidget *sleepTimerLabel = gtk_label_new(NULL);
+gtk_widget_set_no_show_all(sleepTimerLabel, TRUE);
+// Store label in window so callbacks can update it
+g_object_set_data(G_OBJECT(window), "sleep_timer_label", sleepTimerLabel);
 
 
+GtkWidget *sleepTimerBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerBtn, FALSE, FALSE, 0);
+gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
 
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
 
@@ -224,7 +232,9 @@ gtk_button_set_always_show_image(GTK_BUTTON(sleepTimerBtn), TRUE);
  gtk_box_pack_start(GTK_BOX(features_box),play_next,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box), metadataBtn, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), themeBtn, FALSE, FALSE, 0);
- gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBtn, FALSE, FALSE, 0);
+ //gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBtn, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBox, FALSE, FALSE, 0);
+
 
 
 
