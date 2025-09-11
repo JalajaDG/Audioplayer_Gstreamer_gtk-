@@ -18,6 +18,7 @@ extern int currently_playing_song_index; // Global index for the currently playi
 
 extern vector<string> song_list;
 extern string folder_Path; //so other files can use it
+void open_default_folder(GtkWidget *window);
 
 #endif // OPENFOLDER_H
 

@@ -50,6 +50,7 @@ public:
 	  // ✅ Add these setter and getter for main_window
     void setMainWindow(GtkWidget* window) { main_window = window; }
     GtkWidget* getMainWindow() const { return main_window; }
-
+	
+	  void stopPipeline() ;
 };
 #endif  //PLAYAUDIO_H

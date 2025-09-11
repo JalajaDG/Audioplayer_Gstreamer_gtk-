@@ -263,6 +263,7 @@ gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
     
     // Start updating seekbar and time labels every 0.5s
 g_timeout_add(500, (GSourceFunc)update_seek_position, window);
+    open_default_folder(window);
 
     // Start the GTK main event loop
     gtk_main();

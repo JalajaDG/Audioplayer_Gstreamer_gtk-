@@ -201,10 +201,10 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
 
     // **STOP the currently playing stream before starting a new one**
     if (instance->pipeline) {
-        // gst_element_set_state(instance->pipeline, GST_STATE_NULL);
-        // g_print("Previous song completely stopped.\n");
-        gst_element_set_state(instance->pipeline, GST_STATE_READY);
-      g_print("Previous song reset to READY state.\n");
+        gst_element_set_state(instance->pipeline, GST_STATE_NULL);
+        g_print("Previous song completely stopped.\n");
+    //     gst_element_set_state(instance->pipeline, GST_STATE_READY);
+    //   g_print("Previous song reset to READY state.\n");
 
     }
 
@@ -267,6 +267,13 @@ bool PlayAudio::isPlaying() {
     return (state == GST_STATE_PLAYING);
 }
 
+void PlayAudio::stopPipeline() {
+    if (pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+        GstState state;
+        gst_element_get_state(pipeline, &state, NULL, GST_CLOCK_TIME_NONE); // wait until stopped
+    }
+}
 
 
 // void PlayAudio::play_next()
