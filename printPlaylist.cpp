@@ -4,7 +4,7 @@
 
 #include "openFolder.h" // For currently_playing_song_index
 #include "pause.h"  
-
+#include "favourite.h"
  
 
  void on_row_activated(GtkWidget *widget,GtkListBoxRow *row, gpointer data) {
@@ -90,10 +90,25 @@ PlaylistData *pdata = new PlaylistData{window, dialog};
    g_signal_connect(list_box, "row-activated", G_CALLBACK(on_row_activated), pdata);
 
     // Add each audio file in the playlist to the list box
-    for (const string &song : song_list) {
-        GtkWidget *label = gtk_label_new(song.c_str());
-        gtk_list_box_insert(GTK_LIST_BOX(list_box), label, -1);
-    }
+    // for (const string &song : song_list) {
+    //     GtkWidget *label = gtk_label_new(song.c_str());
+    //     gtk_list_box_insert(GTK_LIST_BOX(list_box), label, -1);
+    // }
+ // + New code: show favourite emblem if song exists in favourites
+     for (const string &song : song_list) {
+         GtkWidget *row_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+         GtkWidget *label = gtk_label_new(song.c_str());
+         gtk_box_pack_start(GTK_BOX(row_box), label, TRUE, TRUE, 0);
+    
+         bool isFav = std::find(favourite_songs.begin(), favourite_songs.end(), song) != favourite_songs.end();
+         if (isFav) {
+             GtkWidget *fav_icon = gtk_image_new_from_icon_name("starred-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
+             gtk_box_pack_start(GTK_BOX(row_box), fav_icon, FALSE, FALSE, 0);
+        
+         }
+    
+         gtk_list_box_insert(GTK_LIST_BOX(list_box), row_box, -1);
+     }
 
 
      // ✅ Highlight currently playing song if available
