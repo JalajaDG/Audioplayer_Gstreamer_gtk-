@@ -36,6 +36,7 @@
 #include "theme.h"
 #include "sleepTimer.h"
 #include "favourite.h"
+#include "mute.h"
 #include<algorithm> //for sort
 using namespace std;
 
@@ -161,6 +162,10 @@ GtkWidget* play_next=gtk_button_new_from_icon_name("go-next",GTK_ICON_SIZE_SMALL
 // Store play_next button in window for later use
 g_object_set_data(G_OBJECT(window),"play_next",play_next);
 
+//mute/unmute
+GtkWidget* muteBtn = gtk_button_new_from_icon_name("audio-volume-high-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
+g_object_set_data(G_OBJECT(window), "mute_button", muteBtn);
+
 
 // Metadata button
 GtkWidget *metadataBtn = gtk_button_new_from_icon_name("dialog-information", GTK_ICON_SIZE_SMALL_TOOLBAR);
@@ -224,6 +229,7 @@ g_object_set_data(G_OBJECT(window), "fav_button", FavButton);
     g_signal_connect(themeBtn, "clicked", G_CALLBACK(on_themeBtn_clicked), window);
     g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
 g_signal_connect(FavButton, "clicked", G_CALLBACK(on_FavButton_clicked), window);
+g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
 
 
 
@@ -237,13 +243,13 @@ g_signal_connect(FavButton, "clicked", G_CALLBACK(on_FavButton_clicked), window)
  gtk_box_pack_start(GTK_BOX(features_box), pauseIcon, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box),skip_forward,FALSE,FALSE,0);
  gtk_box_pack_start(GTK_BOX(features_box),play_next,FALSE,FALSE,0);
+   gtk_box_pack_start(GTK_BOX(features_box), muteBtn, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), metadataBtn, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), themeBtn, FALSE, FALSE, 0);
  //gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBtn, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBox, FALSE, FALSE, 0);
  
  gtk_box_pack_start(GTK_BOX(features_box), FavButton, FALSE, FALSE, 0);
- 
 
 
 

@@ -23,7 +23,8 @@ SRCS = audioPlayer.cpp \
        metadata.cpp \
        theme.cpp \
        sleepTimer.cpp \
-       favourite.cpp 
+       favourite.cpp \
+       mute.cpp
       
 
 # Object files

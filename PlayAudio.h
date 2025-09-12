@@ -26,6 +26,7 @@ private:
     GstElement *decodebin;        // Decoder element
     GstElement *audioconvert;     // Audio convert element
     GstElement *audioresample;    // Audio resample element
+    GstElement *volume;          //volume element
     GstElement *autoaudiosink;             // Audio output element
 	GstBus *bus;
 	GstMessage* msg;
@@ -52,5 +53,6 @@ public:
     GtkWidget* getMainWindow() const { return main_window; }
 	
 	  void stopPipeline() ;
+	 GstElement* getVolumeElement() { return volume; } // for mute/unmute
 };
 #endif  //PLAYAUDIO_H
