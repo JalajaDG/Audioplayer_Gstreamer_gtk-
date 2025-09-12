@@ -4,6 +4,7 @@
 #include "pause.h"
 #include "repeat.h"  
 #include "shuffle.h"
+#include "favourite.h"
 
 int currently_playing_song_index;
 PlayAudio* PlayAudio::instance = nullptr;  // Initialize singleton instance
@@ -223,12 +224,33 @@ void PlayAudio::play_audioFile(const string &file_path, const string &folder_pat
    if (seekBox) gtk_range_set_value(GTK_RANGE(seekBox), 0);
    if (current_label) gtk_label_set_text(GTK_LABEL(current_label), "00:00");
     if (total_label)   gtk_label_set_text(GTK_LABEL(total_label), "00:00");
-
+std::string filename = file_path.substr(file_path.find_last_of("/\\") + 1);
     GtkWidget* songLabel = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
+    
     if (songLabel) {
-    std::string filename = file_path.substr(file_path.find_last_of("/\\") + 1);
+   // std::string filename = file_path.substr(file_path.find_last_of("/\\") + 1);
     gtk_label_set_text(GTK_LABEL(songLabel), filename.c_str());
     }
+   
+
+   // ✅ Update favourite/star icon
+GtkWidget* favButton = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "fav_button"));
+if (favButton) {
+    auto it = std::find(favourite_songs.begin(), favourite_songs.end(), filename);
+
+    const char* icon_name;
+    if (it != favourite_songs.end()) {
+        icon_name = "starred-symbolic";   // filled star if in favourites
+        g_print("Song is in favourites → showing filled star\n");
+    } else {
+        icon_name = "non-starred-symbolic"; // empty star otherwise
+        g_print("Song not in favourites → showing empty star\n");
+    }
+
+    GtkWidget *image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_button_set_image(GTK_BUTTON(favButton), image);
+}
+
 
     // Set pipeline state to playing
     GstStateChangeReturn ret = gst_element_set_state(instance->pipeline, GST_STATE_PLAYING);

@@ -22,7 +22,9 @@ SRCS = audioPlayer.cpp \
        shuffle.cpp \
        metadata.cpp \
        theme.cpp \
-       sleepTimer.cpp
+       sleepTimer.cpp \
+       favourite.cpp 
+      
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)

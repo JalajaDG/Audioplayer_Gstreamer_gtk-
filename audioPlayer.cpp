@@ -35,10 +35,9 @@
 #include "metadata.h"
 #include "theme.h"
 #include "sleepTimer.h"
+#include "favourite.h"
 #include<algorithm> //for sort
 using namespace std;
-static char *folder_path;
-static GstElement *playbin = NULL; // Global GStreamer playbin element for playback
 
 
 
@@ -59,6 +58,8 @@ int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
 //initialize gstreamer
     gst_init(&argc, &argv);
+    
+    load_favourites_from_file();   // <<< Load saved favourites at startup
 
     // Create a window
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL); // Create a top-level window
@@ -197,6 +198,12 @@ GtkWidget *sleepTimerBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
 gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerBtn, FALSE, FALSE, 0);
 gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
 
+//add to fav-list
+GtkWidget *FavButton = gtk_button_new_from_icon_name("star-new-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
+g_object_set_data(G_OBJECT(window), "fav_button", FavButton);
+
+
+
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
 
         // Store the song_list in the window data=bcz we need to pass this song_list vector to another function
@@ -216,7 +223,7 @@ gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
        g_signal_connect(metadataBtn, "clicked", G_CALLBACK(on_metadata_clicked), window);
     g_signal_connect(themeBtn, "clicked", G_CALLBACK(on_themeBtn_clicked), window);
     g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
-
+g_signal_connect(FavButton, "clicked", G_CALLBACK(on_FavButton_clicked), window);
 
 
 
@@ -234,6 +241,9 @@ gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), themeBtn, FALSE, FALSE, 0);
  //gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBtn, FALSE, FALSE, 0);
  gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBox, FALSE, FALSE, 0);
+ 
+ gtk_box_pack_start(GTK_BOX(features_box), FavButton, FALSE, FALSE, 0);
+ 
 
 
 
