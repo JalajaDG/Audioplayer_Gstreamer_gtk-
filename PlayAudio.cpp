@@ -6,6 +6,7 @@
 #include "shuffle.h"
 #include "favourite.h"
 #include "mute.h"
+#include "volume.h"
 
 int currently_playing_song_index;
 PlayAudio* PlayAudio::instance = nullptr;  // Initialize singleton instance
@@ -38,17 +39,17 @@ PlayAudio* PlayAudio::getInstance() {
    audioconvert=gst_element_factory_make("audioconvert","audioconvert");
    audioresample=gst_element_factory_make("audioresample","audioresample");
    autoaudiosink=gst_element_factory_make("autoaudiosink","autoaudiosink");
-   volume=gst_element_factory_make("volume","volume");
+volume_element = gst_element_factory_make("volume", "volume");
  
  //check if all elements created
  
-     if (!filesrc || !decodebin || !audioconvert || !audioresample ||!volume|| !autoaudiosink) {
+     if (!filesrc || !decodebin || !audioconvert || !audioresample ||!volume_element|| !autoaudiosink) {
          g_printerr("Failed to create one or more audio pipeline elements.\n");
          return;
      }
  
  //add elements inside pipeline
- gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,volume,autoaudiosink,NULL);
+ gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,volume_element,autoaudiosink,NULL);
  
  
      // Link the elements 
@@ -68,7 +69,8 @@ PlayAudio* PlayAudio::getInstance() {
    // Connect "pad-added" signal to the decodebin element
    g_signal_connect(decodebin,"pad-added",G_CALLBACK(on_pad_added),audioconvert);
  
-    if(!gst_element_link_many(audioconvert,audioresample,volume,autoaudiosink,NULL))
+    if(!gst_element_link_many(audioconvert,audioresample,volume_element,autoaudiosink,NULL))
+
     {
       g_printerr("failed to link audio elements = audioconvert,audioresample  and sink\n");
      return;

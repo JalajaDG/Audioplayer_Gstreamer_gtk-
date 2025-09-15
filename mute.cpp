@@ -34,7 +34,7 @@ void on_mute_clicked(GtkWidget *button, gpointer user_data) {
 
         // Update button icon
         gtk_button_set_image(GTK_BUTTON(button),
-            gtk_image_new_from_icon_name("audio-volume-high-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR));
+        gtk_image_new_from_icon_name("audio-volume-high-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR));
 
         is_muted = false;
     }

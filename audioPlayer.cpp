@@ -37,6 +37,7 @@
 #include "sleepTimer.h"
 #include "favourite.h"
 #include "mute.h"
+#include "volume.h"
 #include<algorithm> //for sort
 using namespace std;
 
@@ -164,6 +165,7 @@ g_object_set_data(G_OBJECT(window),"play_next",play_next);
 
 //mute/unmute
 GtkWidget* muteBtn = gtk_button_new_from_icon_name("audio-volume-high-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
+gtk_widget_set_tooltip_text(muteBtn, "Mute / Unmute");
 g_object_set_data(G_OBJECT(window), "mute_button", muteBtn);
 
 
@@ -207,6 +209,63 @@ gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
 GtkWidget *FavButton = gtk_button_new_from_icon_name("star-new-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
 g_object_set_data(G_OBJECT(window), "fav_button", FavButton);
 
+/// --- VOLUME BUTTON + VERTICAL SLIDER POPUP ---
+// --- VOLUME BUTTON + VERTICAL SLIDER POPUP ---
+
+// Create the volume button (speaker icon)
+GtkWidget *volume_button = gtk_button_new_from_icon_name(
+    "audio-speakers", GTK_ICON_SIZE_BUTTON);
+gtk_widget_set_tooltip_text(volume_button, "Adjust Volume");
+
+// Create a popover attached to the volume button
+GtkWidget *volume_popover = gtk_popover_new(volume_button);
+gtk_popover_set_position(GTK_POPOVER(volume_popover), GTK_POS_TOP);
+
+// Create a vertical box inside the popover
+GtkWidget *vol_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+gtk_container_set_border_width(GTK_CONTAINER(vol_box), 5);
+
+// Create vertical slider (0–100)
+GtkAdjustment *vol_adj = gtk_adjustment_new(50, 0, 100, 1, 10, 0);
+GtkWidget *volume_slider = gtk_scale_new(GTK_ORIENTATION_VERTICAL, vol_adj);
+gtk_scale_set_draw_value(GTK_SCALE(volume_slider), FALSE);
+gtk_widget_set_size_request(volume_slider, 36, 150); // narrow but tall
+gtk_range_set_inverted(GTK_RANGE(volume_slider), TRUE);
+// Label showing numeric volume
+GtkWidget *vol_label = gtk_label_new("50");
+
+// Pack slider + label into box
+gtk_box_pack_start(GTK_BOX(vol_box), volume_slider, TRUE, TRUE, 0);
+gtk_box_pack_start(GTK_BOX(vol_box), vol_label, FALSE, FALSE, 0);
+
+// Add box to popover
+gtk_container_add(GTK_CONTAINER(volume_popover), vol_box);
+
+
+// Instead, only show contents but keep popover hidden
+gtk_widget_show_all(vol_box);
+gtk_widget_hide(volume_popover);   // hide popup initially
+
+// Update label when slider moves
+g_signal_connect(volume_slider, "value-changed",
+    G_CALLBACK(+[] (GtkRange *range, gpointer user_data) {
+        GtkLabel *lbl = GTK_LABEL(user_data);
+        int v = (int)gtk_range_get_value(range);
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", v);
+        gtk_label_set_text(lbl, buf);
+    }), vol_label);
+
+// Show/hide popover when volume button is clicked
+g_signal_connect(volume_button, "clicked",
+    G_CALLBACK(+[] (GtkWidget *button, gpointer user_data) {
+        GtkPopover *popover = GTK_POPOVER(user_data);
+        if (gtk_widget_get_visible(GTK_WIDGET(popover)))
+            gtk_popover_popdown(popover);
+        else
+            gtk_popover_popup(popover);
+    }), volume_popover);
+
 
 
 //gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
@@ -230,6 +289,7 @@ g_object_set_data(G_OBJECT(window), "fav_button", FavButton);
     g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
 g_signal_connect(FavButton, "clicked", G_CALLBACK(on_FavButton_clicked), window);
 g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
+g_signal_connect(volume_slider, "value-changed", G_CALLBACK(on_volume_slider_changed), NULL);
 
 
 
@@ -252,8 +312,7 @@ g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
  gtk_box_pack_start(GTK_BOX(features_box), FavButton, FALSE, FALSE, 0);
 
 
-
-
+gtk_box_pack_start(GTK_BOX(features_box), volume_button, FALSE, FALSE, 5);
    
    // Add label and button to the folder box
     gtk_box_pack_start(GTK_BOX(folderBox), label, TRUE, TRUE, 0);  // Expand label
