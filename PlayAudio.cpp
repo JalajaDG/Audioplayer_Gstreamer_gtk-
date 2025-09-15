@@ -72,7 +72,7 @@ volume_element = gst_element_factory_make("volume", "volume");
     if(!gst_element_link_many(audioconvert,audioresample,volume_element,autoaudiosink,NULL))
 
     {
-      g_printerr("failed to link audio elements = audioconvert,audioresample  and sink\n");
+      g_printerr("failed to link audio elements = audioconveqrt,audioresample  and sink\n");
      return;
     }
  

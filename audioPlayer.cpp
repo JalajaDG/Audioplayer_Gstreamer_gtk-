@@ -289,7 +289,6 @@ g_signal_connect(volume_button, "clicked",
     g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
 g_signal_connect(FavButton, "clicked", G_CALLBACK(on_FavButton_clicked), window);
 g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
-g_signal_connect(volume_slider, "value-changed", G_CALLBACK(on_volume_slider_changed), NULL);
 
 
 
