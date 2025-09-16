@@ -1,0 +1,89 @@
+// ========================= BEFORE =========================
+// Audio-only pipeline
+filesrc → decodebin → audioconvert → audioresample → volume → autoaudiosink
+
+// ==========================================================
+
+
+To add Goom, we need a tee after audioresample to split the audio stream into two branches:
+	Audio branch: continues to volume → autoaudiosink
+	Visualizer branch: goes to queue → goom → gtksink
+
+
+
+// ========================= AFTER ==========================
+// Audio + Goom visualizer pipeline
+
+filesrc → decodebin → audioconvert → audioresample → tee
+           ├─ queue_audio → volume → autoaudiosink      (Audio branch)
+           └─ queue_video → goom → videoconvert → gtksink (Visualizer branch)
+
+// ==========================================================
+
+
+// ---------------- Element Creation ------------------------
+filesrc          = gst_element_factory_make("filesrc", "filesrc");
+decodebin        = gst_element_factory_make("decodebin", "decodebin");
+audioconvert     = gst_element_factory_make("audioconvert", "audioconvert");
+audioresample    = gst_element_factory_make("audioresample", "audioresample");
+volume_element   = gst_element_factory_make("volume", "volume");
+autoaudiosink    = gst_element_factory_make("autoaudiosink", "autoaudiosink");
+
+// New elements for visualization
+tee              = gst_element_factory_make("tee", "tee");
+queue_audio      = gst_element_factory_make("queue", "queue_audio");
+queue_video      = gst_element_factory_make("queue", "queue_video");
+goom             = gst_element_factory_make("goom", "goom");
+videoconvert     = gst_element_factory_make("videoconvert", "videoconvert");
+gtksink          = gst_element_factory_make("gtksink", "gtksink");
+
+
+// ---------------- Add elements to pipeline -----------------
+gst_bin_add_many(GST_BIN(pipeline),
+    filesrc, decodebin, audioconvert, audioresample, tee,
+    queue_audio, volume_element, autoaudiosink,
+    queue_video, goom, videoconvert, gtksink,
+    NULL);
+
+
+// ---------------- Link elements --------------------------
+// Static linking
+gst_element_link(filesrc, decodebin);
+g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), audioconvert);
+gst_element_link_many(audioconvert, audioresample, tee, NULL);
+
+// Tee branches
+gst_element_link_many(tee, queue_audio, volume_element, autoaudiosink, NULL);
+gst_element_link_many(tee, queue_video, goom, videoconvert, gtksink, NULL);
+
+
+// ---------------- Embed GTK visualizer -------------------
+GtkWidget* video_widget = nullptr;
+g_object_get(gtksink, "widget", &video_widget, NULL);
+gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(video_widget), TRUE, TRUE, 0);
+gtk_widget_show(video_widget);
+
+
+
+// ----------------gtksink vs xvimagesink
+
+
+
+Feature/Aspect         gtksink                                        xvimagesink
+-----------------------------------------------------------------------------------------------
+GTK Integration        Embeds directly into GTK widgets              Creates a separate X11 window
+                       No extra window popups                        Hard to integrate in GTK layout
+                       
+Cross-Platform Support Works with GTK3/GTK4 and Wayland              Limited to X11 environments
+                       Modern and well-supported                     May fail on Wayland
+                       
+Event Handling         Can capture GTK events (clicks, resize)       Very limited event handling
+                       Easy to control visualizer from app          Separate window ignores GTK signals
+                       
+Simplicity             No extra window management code needed       Requires additional window management
+Maintainability        Easier resizing, theming, layout consistency More boilerplate, harder to maintain
+                       
+Future-Proof           Preferred for modern GTK/GStreamer apps      Legacy sink, mainly for backward compatibility
+                       
+Conclusion             Best choice for embedding Goom visualizer   Only if a separate X11 window is required
+

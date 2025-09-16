@@ -21,7 +21,6 @@ void on_mute_clicked(GtkWidget *button, gpointer user_data) {
         // Mute audio
         g_object_set(volume_elem, "volume", 0.0, NULL);
         g_print("Volume set to 0.0 (muted)\n");
-
         // Update button icon
         gtk_button_set_image(GTK_BUTTON(button),
             gtk_image_new_from_icon_name("audio-volume-muted-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR));

@@ -40,6 +40,13 @@ PlayAudio* PlayAudio::getInstance() {
    audioresample=gst_element_factory_make("audioresample","audioresample");
    autoaudiosink=gst_element_factory_make("autoaudiosink","autoaudiosink");
 volume_element = gst_element_factory_make("volume", "volume");
+
+//  Create the  elements for visualizer
+tee        = gst_element_factory_make("tee", "audio_tee");
+queue_audio = gst_element_factory_make("queue", "queue_audio");
+queue_goom  = gst_element_factory_make("queue", "queue_goom");
+goom        = gst_element_factory_make("goom", "goom");
+gtksink     = gst_element_factory_make("gtksink", "gtksink");
  
  //check if all elements created
  
@@ -47,11 +54,23 @@ volume_element = gst_element_factory_make("volume", "volume");
          g_printerr("Failed to create one or more audio pipeline elements.\n");
          return;
      }
+     // Check all audio-visualizer elements created
+    if (!tee || !queue_audio || !queue_goom || !goom || !gtksink) {
+    g_printerr("Failed to create visualizer elements\n");
+    return;
+}
  
- //add elements inside pipeline
- gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,volume_element,autoaudiosink,NULL);
- 
- 
+ //add all elements (audio + visualizer) to the pipeline
+
+ //gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,volume_element,autoaudiosink,NULL);
+
+ gst_bin_add_many(GST_BIN(pipeline),
+    filesrc, decodebin,
+    audioconvert, audioresample,
+    tee,                // tee after audioresample
+    queue_audio, volume_element, autoaudiosink,  // audio branch
+    queue_goom, goom, gtksink,                  // visualizer branch
+    NULL);
      // Link the elements 
  
      // (static linking for source to decodebin,
@@ -68,13 +87,43 @@ volume_element = gst_element_factory_make("volume", "volume");
  
    // Connect "pad-added" signal to the decodebin element
    g_signal_connect(decodebin,"pad-added",G_CALLBACK(on_pad_added),audioconvert);
- 
-    if(!gst_element_link_many(audioconvert,audioresample,volume_element,autoaudiosink,NULL))
 
-    {
-      g_printerr("failed to link audio elements = audioconveqrt,audioresample  and sink\n");
-     return;
+ 
+    // Static link: audioconvert → audioresample → tee
+if (!gst_element_link_many(audioconvert, audioresample, tee, NULL)) {
+    g_printerr("Failed to link audioconvert → audioresample → tee\n");
+    return;
+}
+
+ // Tee branches via request pads
+  GstPad *tee_audio_pad = gst_element_get_request_pad(tee, "src_%u");
+    GstPad *queue_audio_pad = gst_element_get_static_pad(queue_audio, "sink");
+    if (gst_pad_link(tee_audio_pad, queue_audio_pad) != GST_PAD_LINK_OK) {
+        g_printerr("Failed to link tee → queue_audio\n");
+        return;
     }
+
+    GstPad *tee_goom_pad = gst_element_get_request_pad(tee, "src_%u");
+    GstPad *queue_goom_pad = gst_element_get_static_pad(queue_goom, "sink");
+    if (gst_pad_link(tee_goom_pad, queue_goom_pad) != GST_PAD_LINK_OK) {
+        g_printerr("Failed to link tee → queue_goom\n");
+        return;
+    }
+
+    // Link remaining elements in branches
+    if (!gst_element_link_many(queue_audio, volume_element, autoaudiosink, NULL)) {
+        g_printerr("Failed to link audio branch queue → volume → sink\n");
+        return;
+    }
+
+    if (!gst_element_link_many(queue_goom, goom, gtksink, NULL)) {
+        g_printerr("Failed to link visualizer branch queue → goom → gtksink\n");
+        return;
+    }
+
+    g_print("Pipeline created successfully with audio + Goom visualizer\n");
+
+
  
 
  

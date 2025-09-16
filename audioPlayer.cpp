@@ -87,11 +87,40 @@ int main(int argc, char *argv[]) {
 
     
     // Create the second partition (empty for now)
-    GtkWidget *second_partition = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    GtkWidget *second_partition = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
    GtkWidget *songLabel = gtk_label_new("No song playing yet");
    g_object_set_data(G_OBJECT(window), "songLabel", songLabel);
+// Add Goom visualization widget
 
-    gtk_box_pack_start(GTK_BOX(second_partition), songLabel, TRUE, TRUE, 0); // Add the label to the second partition
+
+   
+   
+
+    // --- embed the gtksink widget (Goom visualizer) under the song label ---
+// 'player' is the PlayAudio* instance you created earlier
+GtkWidget *gtksink_widget = NULL;
+if (player && player->getGtkSink()) {
+    // Obtain the internal GtkWidget that gtksink uses for rendering
+g_object_get(G_OBJECT(player->getGtkSink()), "widget", &gtksink_widget, NULL);
+
+    if (gtksink_widget) {
+        // Make visualizer expand to use available space
+        gtk_widget_set_hexpand(gtksink_widget, TRUE);
+        gtk_widget_set_vexpand(gtksink_widget, TRUE);
+
+        // Pack it below the song label inside second_partition
+        gtk_box_pack_start(GTK_BOX(second_partition), gtksink_widget, TRUE, TRUE, 0);
+         gtk_box_pack_start(GTK_BOX(second_partition), songLabel, FALSE, FALSE, 10); // Add the label to the second partition
+    } else {
+        g_print("Warning: gtksink widget not available (g_object_get returned NULL)\n");
+        // fallback placeholder (optional)
+       
+    }
+} else {
+    g_print("Warning: player or player->gtksink is NULL\n");
+  
+}
+
 // --- Create a seek box (slider) ---
 GtkWidget *seekBox = gtk_scale_new_with_range(
     GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0); // min=0, max=100, step=1
@@ -289,6 +318,8 @@ g_signal_connect(volume_button, "clicked",
     g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
 g_signal_connect(FavButton, "clicked", G_CALLBACK(on_FavButton_clicked), window);
 g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
+g_signal_connect(volume_slider, "value-changed",
+    G_CALLBACK(on_volume_slider_changed), nullptr);
 
 
 
@@ -314,8 +345,9 @@ g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
 gtk_box_pack_start(GTK_BOX(features_box), volume_button, FALSE, FALSE, 5);
    
    // Add label and button to the folder box
-    gtk_box_pack_start(GTK_BOX(folderBox), label, TRUE, TRUE, 0);  // Expand label
-    gtk_box_pack_start(GTK_BOX(folderBox), button, FALSE, FALSE, 0); // Button takes minimal space
+   gtk_box_pack_start(GTK_BOX(folderBox), button, FALSE, FALSE, 0);  // Button takes minimal space
+    gtk_box_pack_start(GTK_BOX(folderBox), label, FALSE, FALSE, 5);  // Do NOT expand
+   
 
 
   // Add the  folderbox,featurebox and second box  to the vbox (vertical box)

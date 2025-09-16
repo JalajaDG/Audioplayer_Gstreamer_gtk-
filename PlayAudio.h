@@ -7,9 +7,15 @@
 #include <vector>
 #include <gst/gst.h>
 #include <gst/gstelement.h>  // For gst_element_unref
-
+// For goom / audio visualization
+#include <gst/audio/audio.h>
+#include <gst/video/video.h>
+#include <gst/video/videooverlay.h>
 
 #include <gst/gst.h>
+
+
+
 using namespace std;
 
 
@@ -31,6 +37,13 @@ private:
 	GstBus *bus;
 	GstMessage* msg;
 	GtkWidget* main_window = nullptr;  // Store reference to main GTK window
+
+	 // ✅ Visualizer elements
+    GstElement *tee;              // tee to split audio branch
+    GstElement *queue_audio;      // queue for audio branch
+    GstElement *queue_goom;       // queue for visualizer branch
+    GstElement *goom;             // goom visualizer
+    GstElement *gtksink;          // GTK sink to display visualizer
 
 public:
 	PlayAudio();
@@ -55,6 +68,9 @@ public:
 	  void stopPipeline() ;
 	 GstElement* getVolumeElement() { return volume_element; } // for mute/unmute
 	
+	// ✅ Access visualizer elements (optional)
+    GstElement* getGoomElement() { return goom; }
+    GstElement* getGtkSink() { return gtksink; }
 
 };
 #endif  //PLAYAUDIO_H
