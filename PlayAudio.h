@@ -44,10 +44,12 @@ private:
     GstElement *queue_goom;       // queue for visualizer branch
     GstElement *goom;             // goom visualizer
     GstElement *gtksink;          // GTK sink to display visualizer
+	PlayAudio();  //constr has to be private bcz,singleton patter,This means multiple instances of PlayAudio can be created, which breaks the singleton rule of "only one instance".
+	~PlayAudio(); 
 
 public:
-	PlayAudio();
-	~PlayAudio();
+	// PlayAudio(); //constr can be public bcz its is a singletn patter
+	// ~PlayAudio();
 	static PlayAudio* getInstance();  // Access Singleton instance
 	bool isPlaying();
 
