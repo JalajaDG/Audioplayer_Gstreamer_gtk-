@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     // Initialize GTK
     gtk_init(&argc, &argv);
 //initialize gstreamer
-    gst_init(&argc, &argv);
+  //  gst_init(&argc, &argv);
     
     load_favourites_from_file();   // <<< Load saved favourites at startup
 
