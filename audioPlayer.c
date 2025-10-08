@@ -35,6 +35,8 @@ static void on_button_clicked(GtkWidget *widget, gpointer data) {
      // Add a filter for audio files
     GtkFileFilter *filter = gtk_file_filter_new();
     gtk_file_filter_add_mime_type(filter, "audio/mpeg");  // .mp3
+ 
+
     gtk_file_filter_add_mime_type(filter, "audio/wav");   // .wav
     gtk_file_filter_add_mime_type(filter, "audio/ogg");   // .ogg
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);

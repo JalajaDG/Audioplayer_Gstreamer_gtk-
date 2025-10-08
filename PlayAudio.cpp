@@ -18,162 +18,215 @@ PlayAudio* PlayAudio::getInstance() {
     }
     return instance;
 }
- PlayAudio::PlayAudio()
- {
-   //initialize gstreamer
-   gst_init(NULL,NULL);
  
-   // Create the pipeline
-    pipeline=gst_pipeline_new("audio-pipeline");
- 
-    if(!pipeline)
-    {
-     g_printerr("Failed to create audio pipeline ");
-     return;
+
+
+PlayAudio::PlayAudio()
+ : pipeline(nullptr), filesrc(nullptr), decodebin(nullptr),
+   tee(nullptr),
+   queue_audio(nullptr), audiobin(nullptr),
+   queue_visualizer(nullptr), visualizer_bin(nullptr),
+   videobin(nullptr), queue_video_sink(nullptr), videoconvert(nullptr), gtksink(nullptr),
+   goom(nullptr), volume_element(nullptr), bus(nullptr), msg(nullptr)
+{
+    gst_init(nullptr, nullptr);
+
+    pipeline = gst_pipeline_new("audio_pipeline");
+    if (!pipeline) {
+        g_printerr("Failed to create pipeline\n");
+        return;
     }
-  
- 
-        // Create the GStreamer elements
-   filesrc=gst_element_factory_make("filesrc","filesrc");
-   decodebin=gst_element_factory_make("decodebin","decodebin");
-   audioconvert=gst_element_factory_make("audioconvert","audioconvert");
-   audioresample=gst_element_factory_make("audioresample","audioresample");
-   autoaudiosink=gst_element_factory_make("autoaudiosink","autoaudiosink");
-volume_element = gst_element_factory_make("volume", "volume");
 
-//  Create the  elements for visualizer
-tee        = gst_element_factory_make("tee", "audio_tee");
-queue_audio = gst_element_factory_make("queue", "queue_audio");
-queue_goom  = gst_element_factory_make("queue", "queue_goom");
-goom        = gst_element_factory_make("goom", "goom");
-gtksink     = gst_element_factory_make("gtksink", "gtksink");
- 
- //check if all elements created
- 
-     if (!filesrc || !decodebin || !audioconvert || !audioresample ||!volume_element|| !autoaudiosink) {
-         g_printerr("Failed to create one or more audio pipeline elements.\n");
-         return;
-     }
-     // Check all audio-visualizer elements created
-    if (!tee || !queue_audio || !queue_goom || !goom || !gtksink) {
-    g_printerr("Failed to create visualizer elements\n");
-    return;
-}
- 
- //add all elements (audio + visualizer) to the pipeline
+    /* Create main elements */
+    filesrc = gst_element_factory_make("filesrc", "filesrc");
+    decodebin = gst_element_factory_make("decodebin", "decodebin");
+    tee = gst_element_factory_make("tee", "audio_tee");
 
- //gst_bin_add_many(GST_BIN(pipeline),filesrc,decodebin,audioconvert,audioresample,volume_element,autoaudiosink,NULL);
+    queue_audio = gst_element_factory_make("queue", "queue_audio");
+    queue_visualizer = gst_element_factory_make("queue", "queue_visualizer");
 
- gst_bin_add_many(GST_BIN(pipeline),
-    filesrc, decodebin,
-    audioconvert, audioresample,
-    tee,                // tee after audioresample
-    queue_audio, volume_element, autoaudiosink,  // audio branch
-    queue_goom, goom, gtksink,                  // visualizer branch
-    NULL);
-     // Link the elements 
- 
-     // (static linking for source to decodebin,
-     // dynamic link fo decodebin to audioconvert..usifng pad added signal,
-     // dynamic link fo audioconvert to audioresample,
-     // dynamic link fo audioresample to autoaudiosink)
- 
- 
-    if(!gst_element_link(filesrc,decodebin))
-    {
-     g_printerr("failed to link audio elements = sorce and decodebin\n");
-     return;
+    if (!filesrc || !decodebin || !tee || !queue_audio || !queue_visualizer) {
+        g_printerr("Failed to create main pipeline elements\n");
+        return;
     }
- 
-   // Connect "pad-added" signal to the decodebin element
-   g_signal_connect(decodebin,"pad-added",G_CALLBACK(on_pad_added),audioconvert);
 
- 
-    // Static link: audioconvert → audioresample → tee
-if (!gst_element_link_many(audioconvert, audioresample, tee, NULL)) {
-    g_printerr("Failed to link audioconvert → audioresample → tee\n");
-    return;
-}
+    /* ------------------ audiobin ------------------ */
+    audiobin = gst_bin_new("audiobin");
+    GstElement *audio_convert = gst_element_factory_make("audioconvert", "audio_convert");
+    GstElement *audio_resample = gst_element_factory_make("audioresample", "audio_resample");
+    volume_element = gst_element_factory_make("volume", "volume");
+    GstElement *autoaudiosink = gst_element_factory_make("autoaudiosink", "autoaudiosink");
 
- // Tee branches via request pads
-  GstPad *tee_audio_pad = gst_element_get_request_pad(tee, "src_%u");
+    if (!audio_convert || !audio_resample || !volume_element || !autoaudiosink) {
+        g_printerr("Failed to create audiobin elements\n");
+        return;
+    }
+
+    gst_bin_add_many(GST_BIN(audiobin), audio_convert, audio_resample, volume_element, autoaudiosink, NULL);
+    if (!gst_element_link_many(audio_convert, audio_resample, volume_element, autoaudiosink, NULL)) {
+        g_printerr("Failed to link audiobin elements\n");
+        return;
+    }
+
+    /* audiobin: expose sink ghost pad (so queue_audio -> audiobin works) */
+    GstPad *audiobin_sink_raw = gst_element_get_static_pad(audio_convert, "sink");
+    GstPad *audiobin_sink_ghost = gst_ghost_pad_new("sink", audiobin_sink_raw);
+    gst_element_add_pad(audiobin, audiobin_sink_ghost);
+    gst_object_unref(audiobin_sink_raw);
+
+    /* ------------------ visualizer_bin ------------------ */
+    visualizer_bin = gst_bin_new("visualizer_bin");
+    GstElement *vis_convert = gst_element_factory_make("audioconvert", "vis_convert");
+    GstElement *vis_resample = gst_element_factory_make("audioresample", "vis_resample");
+    goom = gst_element_factory_make("goom", "goom");
+
+    if (!vis_convert || !vis_resample || !goom) {
+        g_printerr("Failed to create visualizer bin elements\n");
+        return;
+    }
+
+    gst_bin_add_many(GST_BIN(visualizer_bin), vis_convert, vis_resample, goom, NULL);
+    if (!gst_element_link_many(vis_convert, vis_resample, goom, NULL)) {
+        g_printerr("Failed to link visualizer_bin elements\n");
+        return;
+    }
+
+    /* visualizer_bin: expose sink ghost pad (to accept queue_visualizer -> visualizer_bin) */
+    GstPad *vis_sink_raw = gst_element_get_static_pad(vis_convert, "sink");
+    GstPad *vis_sink_ghost = gst_ghost_pad_new("sink", vis_sink_raw);
+    gst_element_add_pad(visualizer_bin, vis_sink_ghost);
+    gst_object_unref(vis_sink_raw);
+
+    /* visualizer_bin: expose src ghost pad from goom so visualizer_bin -> videobin works */
+    GstPad *goom_src_raw = gst_element_get_static_pad(goom, "src");
+    if (!goom_src_raw) {
+        g_printerr("Warning: goom has no 'src' pad (visualization might not produce video frames)\n");
+    } else {
+        GstPad *vis_src_ghost = gst_ghost_pad_new("src", goom_src_raw);
+        gst_element_add_pad(visualizer_bin, vis_src_ghost);
+        gst_object_unref(goom_src_raw);
+    }
+
+    /* ------------------ videobin ------------------ */
+    videobin = gst_bin_new("videobin");
+    queue_video_sink = gst_element_factory_make("queue", "queue_video_sink");
+    videoconvert = gst_element_factory_make("videoconvert", "videoconvert");
+    gtksink = gst_element_factory_make("gtksink", "gtksink");
+
+    if (!queue_video_sink || !videoconvert || !gtksink) {
+        g_printerr("Failed to create videobin elements\n");
+        return;
+    }
+
+    gst_bin_add_many(GST_BIN(videobin), queue_video_sink, videoconvert, gtksink, NULL);
+    if (!gst_element_link_many(queue_video_sink, videoconvert, gtksink, NULL)) {
+        g_printerr("Failed to link videobin elements\n");
+        return;
+    }
+
+    /* videobin: expose sink ghost pad from queue_video_sink */
+    GstPad *videobin_sink_raw = gst_element_get_static_pad(queue_video_sink, "sink");
+    GstPad *videobin_sink_ghost = gst_ghost_pad_new("sink", videobin_sink_raw);
+    gst_element_add_pad(videobin, videobin_sink_ghost);
+    gst_object_unref(videobin_sink_raw);
+
+    /* ------------------ Add elements to pipeline ------------------ */
+    gst_bin_add_many(GST_BIN(pipeline),
+                     filesrc, decodebin, tee,
+                     queue_audio, audiobin,
+                     queue_visualizer, visualizer_bin,
+                     videobin,
+                     NULL);
+
+    /* Link filesrc -> decodebin */
+    if (!gst_element_link(filesrc, decodebin)) {
+        g_printerr("Failed to link filesrc -> decodebin\n");
+        return;
+    }
+
+    /* connect decodebin pad-added; pass 'this' so handler can access instance members */
+    g_signal_connect(decodebin, "pad-added", G_CALLBACK(PlayAudio::on_pad_added), this);
+
+    /* Request tee src pads and link to queues */
+    GstPad *tee_audio_pad = gst_element_get_request_pad(tee, "src_%u");
     GstPad *queue_audio_pad = gst_element_get_static_pad(queue_audio, "sink");
     if (gst_pad_link(tee_audio_pad, queue_audio_pad) != GST_PAD_LINK_OK) {
-        g_printerr("Failed to link tee → queue_audio\n");
-        return;
+        g_printerr("Failed to link tee -> queue_audio\n");
+    }
+    gst_object_unref(tee_audio_pad);
+
+    GstPad *tee_vis_pad = gst_element_get_request_pad(tee, "src_%u");
+    GstPad *queue_vis_pad = gst_element_get_static_pad(queue_visualizer, "sink");
+    if (gst_pad_link(tee_vis_pad, queue_vis_pad) != GST_PAD_LINK_OK) {
+        g_printerr("Failed to link tee -> queue_visualizer\n");
+    }
+    gst_object_unref(tee_vis_pad);
+
+    /* Link queue_audio -> audiobin (audiobin has sink ghost) */
+    if (!gst_element_link(queue_audio, audiobin)) {
+        g_printerr("Failed to link queue_audio -> audiobin\n");
     }
 
-    GstPad *tee_goom_pad = gst_element_get_request_pad(tee, "src_%u");
-    GstPad *queue_goom_pad = gst_element_get_static_pad(queue_goom, "sink");
-    if (gst_pad_link(tee_goom_pad, queue_goom_pad) != GST_PAD_LINK_OK) {
-        g_printerr("Failed to link tee → queue_goom\n");
-        return;
+    /* Link queue_visualizer -> visualizer_bin */
+    if (!gst_element_link(queue_visualizer, visualizer_bin)) {
+        g_printerr("Failed to link queue_visualizer -> visualizer_bin\n");
     }
 
-    // Link remaining elements in branches
-    if (!gst_element_link_many(queue_audio, volume_element, autoaudiosink, NULL)) {
-        g_printerr("Failed to link audio branch queue → volume → sink\n");
-        return;
+    /* Link visualizer_bin -> videobin (visualizer_bin has src ghost, videobin has sink ghost) */
+    if (!gst_element_link(visualizer_bin, videobin)) {
+        g_printerr("Failed to link visualizer_bin -> videobin\n");
     }
 
-    if (!gst_element_link_many(queue_goom, goom, gtksink, NULL)) {
-        g_printerr("Failed to link visualizer branch queue → goom → gtksink\n");
-        return;
-    }
+    g_print("Pipeline created successfully with audio + visualizer + video bins\n");
+}
 
-    g_print("Pipeline created successfully with audio + Goom visualizer\n");
-
-
- 
-
- 
- }
-//destructor
 PlayAudio::~PlayAudio()
 {
- // Clean up and stop the pipeline if running
-if(pipeline)
-{
-  gst_element_set_state(pipeline,GST_STATE_NULL);
-gst_object_unref(pipeline); // also cleans up child elements
-        pipeline = NULL; // Prevent using old reference
-
-
-}
-
-
-
-
-}
-
-
-
-
-void PlayAudio::  on_pad_added(GstElement* element,GstPad* pad,gpointer user_data)
-{
-    GstElement *audioconvert = (GstElement *)user_data;
-
-     // Get the sink pad of audioconvert
-    GstPad *sinkpad=gst_element_get_static_pad(audioconvert,"sink");
-
-    //  // Print pad capabilities for debugging
-    // GstCaps *caps = gst_pad_query_caps(pad, NULL);
-    // g_print("Pad capabilities: %s\n", gst_caps_to_string(caps));
-    // gst_caps_unref(caps);
-
-    // Link the dynamic pad from decodebin to audioconvert
-    if(gst_pad_link(pad,sinkpad)!= GST_PAD_LINK_OK)
-    {
-     g_printerr("Failed to link pads of decodebin and audioconvert in audio pipeline!\n");
+    if (pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+        gst_object_unref(pipeline);
+        pipeline = nullptr;
     }
-  // Release the sinkpad reference
-  gst_object_unref(sinkpad);
 }
 
+/* pad-added: link decodebin new pad to tee's static sink pad */
+void PlayAudio::on_pad_added(GstElement* decodebin_elem, GstPad* new_pad, gpointer user_data)
+{
+    PlayAudio *self = static_cast<PlayAudio*>(user_data);
+    if (!self) return;
 
+    GstCaps *caps = gst_pad_get_current_caps(new_pad);
+    if (!caps) caps = gst_pad_query_caps(new_pad, NULL);
+    if (!caps) {
+        g_printerr("on_pad_added: could not get caps\n");
+        return;
+    }
 
+    const GstStructure *str = gst_caps_get_structure(caps, 0);
+    const gchar *name = gst_structure_get_name(str);
 
+    /* For our design we always link decodebin -> tee (tee will split to audio/visualizer).
+       Only caveat: if decodebin produces multiple pads, linking to the single tee sink is OK.
+       However we still show debug which caps were linked. */
+    GstPad *tee_sink = gst_element_get_static_pad(self->tee, "sink");
+    if (!tee_sink) {
+        g_printerr("on_pad_added: tee sink pad not found\n");
+    } else {
+        if (gst_pad_is_linked(tee_sink)) {
+            g_print("tee sink already linked\n");
+        } else {
+            GstPadLinkReturn ret = gst_pad_link(new_pad, tee_sink);
+            if (ret != GST_PAD_LINK_OK) {
+                g_printerr("Failed to link decodebin new pad (%s) -> tee sink (ret=%d)\n", name, ret);
+            } else {
+                g_print("Linked decodebin pad (%s) -> tee sink\n", name);
+            }
+        }
+        gst_object_unref(tee_sink);
+    }
 
+    gst_caps_unref(caps);
+}
 
 
 

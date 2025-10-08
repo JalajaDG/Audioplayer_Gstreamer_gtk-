@@ -1,0 +1,14 @@
+filesrc → decodebin → audioconvert → audioresample → tee
+           ├─ queue_audio → volume → autoaudiosink      (Audio branch)
+           └─ queue_video → goom → videoconvert → gtksink (Visualizer branch)
+           
+           
+
+
+           
+           
+           
+ filesrc → decodebin → tee
+           ├─ queue_audio → volume → autoaudiosink
+           └─ queue_video → videoconvert → videoscale → autovideosink
+

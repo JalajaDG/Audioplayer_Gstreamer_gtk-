@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
     load_favourites_from_file();   // <<< Load saved favourites at startup
 
     // Create a window
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL); // Create a top-level window
-    gtk_window_set_title(GTK_WINDOW(window), "Simple GTK Window"); // Set the title of the window
+    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL); // Create a top-level window..GTK_WINDOW_TOPLEVEL means a standard application window (with title bar, close/minimize buttons, etc.).
+    gtk_window_set_title(GTK_WINDOW(window), "Audio player Application"); // Set the title of the window..
     gtk_window_set_default_size(GTK_WINDOW(window), 600, 400); // Set the size of the window
 
 

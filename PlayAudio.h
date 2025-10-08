@@ -47,6 +47,15 @@ private:
 	PlayAudio();  //constr has to be private bcz,singleton patter,This means multiple instances of PlayAudio can be created, which breaks the singleton rule of "only one instance".
 	~PlayAudio(); 
 
+
+
+	GstElement *audiobin; // (audioconvert → audioresample → volume → autoaudiosink)
+	GstElement *visualizer_bin; //(queue_video_sink → videoconvert → gtksink)
+	GstElement *videobin; //  (audioconvert → audioresample → goom)
+ 	GstElement *queue_visualizer;
+    GstElement *queue_video_sink;
+    GstElement *videoconvert;
+
 public:
 	// PlayAudio(); //constr can be public bcz its is a singletn patter
 	// ~PlayAudio();
