@@ -20,7 +20,6 @@ PlayAudio* PlayAudio::getInstance() {
 }
  
 
-
 PlayAudio::PlayAudio()
  : pipeline(nullptr), filesrc(nullptr), decodebin(nullptr),
    tee(nullptr),
@@ -227,7 +226,6 @@ void PlayAudio::on_pad_added(GstElement* decodebin_elem, GstPad* new_pad, gpoint
 
     gst_caps_unref(caps);
 }
-
 
 
 

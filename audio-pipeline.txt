@@ -118,4 +118,12 @@ filesrc → decodebin → tee
        - Processes audio for visualization.
        - Independent of audio and video branches to avoid pipeline blocking.
        - Ensures goom receives correct PCM audio format for visualization.
+       
+       
+ 
+ --------------------------------------------------------
+ how to connect these elements....
+ ------------------------------------------- 
+       
+     
 
