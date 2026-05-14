@@ -42,12 +42,17 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
     // Extract tags
     const GstTagList* tags = gst_discoverer_info_get_tags(info);
     gchar *title = nullptr, *artist = nullptr, *album = nullptr, *comment = nullptr, *year_str = nullptr;
+    gchar *audio_codec_tag = nullptr;
+    guint bitrate = 0;
     if (tags) {
         gst_tag_list_get_string(tags, GST_TAG_TITLE, &title);
         gst_tag_list_get_string(tags, GST_TAG_ARTIST, &artist);
         gst_tag_list_get_string(tags, GST_TAG_ALBUM, &album);
         gst_tag_list_get_string(tags, GST_TAG_COMMENT, &comment);
         gst_tag_list_get_string(tags, GST_TAG_DATE, &year_str);
+        gst_tag_list_get_string(tags, GST_TAG_AUDIO_CODEC, &audio_codec_tag);
+        if (!gst_tag_list_get_uint(tags, GST_TAG_BITRATE, &bitrate))
+            gst_tag_list_get_uint(tags, GST_TAG_NOMINAL_BITRATE, &bitrate);
     }
 
     // Duration in minutes and seconds
@@ -61,6 +66,7 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
     gchar *codec = nullptr;
     guint channels = 0;
     guint sample_rate = 0;
+    guint bit_depth = 0;
 
     const GstDiscovererStreamInfo* sinfo_const = gst_discoverer_info_get_stream_info(info);
     if (sinfo_const) {
@@ -74,17 +80,29 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
             gchar* caps_str = gst_caps_to_string(caps);
             if (g_str_has_prefix(caps_str, "audio/")) {
                 codec = g_strdup(gst_structure_get_name(s));
-                gint c = 0, rate = 0;
+                gint c = 0, rate = 0, depth = 0;
                 gst_structure_get_int(s, "channels", &c);
                 gst_structure_get_int(s, "rate", &rate);
-                channels = c;
-                sample_rate = rate;
+                gst_structure_get_int(s, "depth", &depth);
+                channels = (guint)c;
+                sample_rate = (guint)rate;
+                bit_depth = (guint)depth;
             }
             g_free(caps_str);
         }
     }
 
-    // Prepare formatted metadata with spacing and tabs
+    // Human-readable channel layout
+    const gchar* channel_layout = "Unknown";
+    if (channels == 1)      channel_layout = "Mono";
+    else if (channels == 2) channel_layout = "Stereo";
+    else if (channels == 6) channel_layout = "5.1 Surround";
+    else if (channels == 8) channel_layout = "7.1 Surround";
+    else if (channels > 2)  channel_layout = "Multichannel";
+
+    // Prefer human-readable codec name from tags over caps structure name
+    const gchar* codec_display = audio_codec_tag ? audio_codec_tag : (codec ? codec : "Unknown");
+
     gchar metadata_text[2048];
     snprintf(metadata_text, sizeof(metadata_text),
              "<b>General</b>\n"
@@ -97,8 +115,10 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
              "  Container  : %s\n\n"
              "<b>Audio</b>\n"
              "  Codec      : %s\n"
-             "  Channels   : %u\n"
-             "  Sample rate: %u Hz",
+             "  Bitrate    : %u kbps\n"
+             "  Sample Rate: %u Hz\n"
+             "  Bit Depth  : %s\n"
+             "  Channels   : %u (%s)",
              title ? title : "Unknown",
              artist ? artist : "Unknown",
              album ? album : "Unknown",
@@ -107,9 +127,12 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
              duration_sec,
              comment ? comment : "Unknown",
              container ? container : "Unknown",
-             codec ? codec : "Unknown",
+             codec_display,
+             bitrate / 1000,
+             sample_rate,
+             bit_depth > 0 ? g_strdup_printf("%u-bit", bit_depth) : "Unknown",
              channels,
-             sample_rate
+             channel_layout
     );
 
     // Create GTK dialog with markup
@@ -136,6 +159,7 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
     g_free(album);
     g_free(comment);
     g_free(year_str);
+    g_free(audio_codec_tag);
     g_free(container);
     g_free(codec);
     g_object_unref(info);
