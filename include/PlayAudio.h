@@ -10,8 +10,6 @@
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/video/videooverlay.h>
-#include "gst_utils.h"
-
 /**
  * @class PlayAudio
  * @brief Core audio player class implementing singleton pattern with modern C++

@@ -103,6 +103,9 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
     // Prefer human-readable codec name from tags over caps structure name
     const gchar* codec_display = audio_codec_tag ? audio_codec_tag : (codec ? codec : "Unknown");
 
+    char bit_depth_str[16] = "Unknown";
+    if (bit_depth > 0) snprintf(bit_depth_str, sizeof(bit_depth_str), "%u-bit", bit_depth);
+
     gchar metadata_text[2048];
     snprintf(metadata_text, sizeof(metadata_text),
              "<b>General</b>\n"
@@ -130,7 +133,7 @@ void on_metadata_clicked(GtkWidget* widget, gpointer data) noexcept {
              codec_display,
              bitrate / 1000,
              sample_rate,
-             bit_depth > 0 ? g_strdup_printf("%u-bit", bit_depth) : "Unknown",
+             bit_depth_str,
              channels,
              channel_layout
     );
