@@ -1,0 +1,399 @@
+
+//g++ `pkg-config --cflags gtk+-3.0` audioPlayer.cpp -o ap `pkg-config --libs gtk+-3.0`
+
+//g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp   -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp pause.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0` 
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp pause.cpp seek.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp pause.cpp seek.cpp  seekForward.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+// g++ `pkg-config --cflags gtk+-3.0 gstreamer-1.0` audioPlayer.cpp openFolder.cpp  printPlaylist.cpp PlayAudio.cpp pause.cpp seek.cpp  seekForward.cpp seekBackward.cpp -o ap `pkg-config --libs gtk+-3.0 gstreamer-1.0`
+
+
+#include<iostream>
+#include <gtk/gtk.h>
+#include<string.h>
+#include <vector>
+#include <gst/gst.h>
+
+//seprated files
+#include "pause.h"
+
+#include "openFolder.h" 
+#include "printPlaylist.h"
+#include "PlayAudio.h"
+#include "seek.h"
+#include "seekForward.h"
+#include "seekBackward.h"
+#include "playNext.h"
+#include "playPrev.h"
+#include "repeat.h"
+#include "shuffle.h"
+#include "metadata.h"
+#include "theme.h"
+#include "sleepTimer.h"
+#include "favourite.h"
+#include "mute.h"
+#include "volume.h"
+#include<algorithm> //for sort
+using namespace std;
+
+
+
+
+
+
+// Callback function when the window is closed
+static void on_window_destroy(GtkWidget *widget, gpointer data) {
+    (void)widget; (void)data;
+    gtk_main_quit();
+}
+
+// Callback for favourite button
+static void on_fav_button_clicked(GtkWidget *widget, gpointer data) noexcept {
+    Favourites *fav_ptr = static_cast<Favourites*>(g_object_get_data(G_OBJECT(data), "favourites_ptr"));
+    if (fav_ptr) {
+        fav_ptr->onFavButtonClicked(widget, data);
+    }
+}
+
+// Callback for volume button (show/hide popover)
+static void on_volume_button_clicked(GtkWidget *button, gpointer data) noexcept {
+    (void)button;
+    GtkPopover *popover = GTK_POPOVER(data);
+    if (gtk_widget_get_visible(GTK_WIDGET(popover))) {
+        gtk_popover_popdown(popover);
+    } else {
+        gtk_popover_popup(popover);
+    }
+}
+
+
+
+
+
+int main(int argc, char *argv[]) {
+    // Initialize GTK
+    gtk_init(&argc, &argv);
+//initialize gstreamer
+  //  gst_init(&argc, &argv);
+    
+    // Create Favourites instance and load from file
+    static Favourites favourites;
+
+    // Create a window
+    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL); // Create a top-level window..GTK_WINDOW_TOPLEVEL means a standard application window (with title bar, close/minimize buttons, etc.).
+    gtk_window_set_title(GTK_WINDOW(window), "Audio player Application"); // Set the title of the window..
+    gtk_window_set_default_size(GTK_WINDOW(window), 600, 400); // Set the size of the window
+
+
+    // Get the singleton instance
+    PlayAudio& player = PlayAudio::getInstance();
+    player.setMainWindow(window);   // <<< Set the main GTK window reference here
+
+ // Create a vertical box to divide the window into two parts
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0); // Vertical box with 10px spacing
+    
+    //FOLDER BOX
+    GtkWidget *folderBox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,0);
+    GtkWidget *label = gtk_label_new("No folder selected"); // Label to display the folder path
+    g_object_set_data(G_OBJECT(window), "folder_label", label); // Store the label in the window's data
+
+    
+    GtkWidget *button =     gtk_button_new_from_icon_name("folder", GTK_ICON_SIZE_SMALL_TOOLBAR);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_openFolder_clicked), window); // Connect button signal
+
+    
+    // Create the second partition (empty for now)
+    GtkWidget *second_partition = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+   GtkWidget *songLabel = gtk_label_new("No song playing yet");
+   g_object_set_data(G_OBJECT(window), "songLabel", songLabel);
+// Add Goom visualization widget
+
+
+   
+   
+
+    // --- embed the gtksink widget (Goom visualizer) under the song label ---
+// 'player' is the PlayAudio& reference instance you created earlier
+GtkWidget *gtksink_widget = NULL;
+if (player.getGtkSink()) {
+    // Obtain the internal GtkWidget that gtksink uses for rendering
+    g_object_get(G_OBJECT(player.getGtkSink()), "widget", &gtksink_widget, NULL);
+
+    if (gtksink_widget) {
+        // Make visualizer expand to use available space
+        gtk_widget_set_hexpand(gtksink_widget, TRUE);
+        gtk_widget_set_vexpand(gtksink_widget, TRUE);
+
+        // Pack it below the song label inside second_partition
+        gtk_box_pack_start(GTK_BOX(second_partition), gtksink_widget, TRUE, TRUE, 0);
+         gtk_box_pack_start(GTK_BOX(second_partition), songLabel, FALSE, FALSE, 10); // Add the label to the second partition
+    } else {
+        g_print("Warning: gtksink widget not available (g_object_get returned NULL)\n");
+        // fallback placeholder (optional)
+       
+    }
+} else {
+    g_print("Warning: player or player->gtksink is NULL\n");
+  
+}
+
+// --- Create a seek box (slider) ---
+GtkWidget *seekBox = gtk_scale_new_with_range(
+    GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0); // min=0, max=100, step=1
+gtk_scale_set_draw_value(GTK_SCALE(seekBox), FALSE); // Don't show numeric value
+gtk_widget_set_hexpand(seekBox, TRUE);               // Expand to fill width
+
+// Store seekBox in window for later use
+g_object_set_data(G_OBJECT(window), "seek_box", seekBox);
+
+
+
+
+// --- Create current time and total duration labels ---
+GtkWidget *current_time_label = gtk_label_new("00:00");
+GtkWidget *total_time_label = gtk_label_new("00:00");
+// Store labels in window for later use
+g_object_set_data(G_OBJECT(window), "current_time_label", current_time_label);
+g_object_set_data(G_OBJECT(window), "total_time_label", total_time_label);
+
+
+
+//seek_box(conatins current time,seekbar,total time)
+GtkWidget *seek_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+// Add labels and seekbox to the horizontal box
+gtk_box_pack_start(GTK_BOX(seek_hbox), current_time_label, FALSE, FALSE, 5);
+gtk_box_pack_start(GTK_BOX(seek_hbox), seekBox, TRUE, TRUE, 5);
+gtk_box_pack_start(GTK_BOX(seek_hbox), total_time_label, FALSE, FALSE, 5);
+
+
+
+
+    //create playback parttion -play,pause,stop
+    //GtkWidget *playback_partition
+
+   // Create THE features PARTITON
+   GtkWidget *features_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+GtkWidget *ShowAudioFilesIcon = gtk_button_new_from_icon_name("multimedia-volume-control", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+
+// Create Repeat button
+GtkWidget *repeatBtn = gtk_button_new_from_icon_name("media-playlist-repeat-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+g_object_set_data(G_OBJECT(window), "repeat_button", repeatBtn);
+
+// Shuffle button
+GtkWidget *shuffleBtn = gtk_button_new_from_icon_name("media-playlist-shuffle-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+g_object_set_data(G_OBJECT(window), "shuffle_button", shuffleBtn);
+
+
+//play prev song
+GtkWidget* play_prev=gtk_button_new_from_icon_name("go-previous",GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+// Store play_prev button in window for later use
+g_object_set_data(G_OBJECT(window),"play_prev",play_prev);
+
+//skip backward-10s
+GtkWidget *skip_backward=gtk_button_new_from_icon_name("media-skip-backward",GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+// Store skip backward button in window for later use
+g_object_set_data(G_OBJECT(window), "skip_backward", skip_backward);
+
+GtkWidget *pauseIcon = gtk_button_new_from_icon_name("media-playback-pause", GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+// Store pause button in window for later use
+g_object_set_data(G_OBJECT(window), "pause_button", pauseIcon);
+
+   //skip forward-10s
+    GtkWidget *skip_forward=gtk_button_new_from_icon_name("media-skip-forward",GTK_ICON_SIZE_SMALL_TOOLBAR); //gtk3-icon-browser
+    // Store skip_forward button in window for later use
+    g_object_set_data(G_OBJECT(window),"skip_forward",skip_forward);
+
+//play next song
+GtkWidget* play_next=gtk_button_new_from_icon_name("go-next",GTK_ICON_SIZE_SMALL_TOOLBAR);//in termianl =gtk3-icon-browser
+// Store play_next button in window for later use
+g_object_set_data(G_OBJECT(window),"play_next",play_next);
+
+//mute/unmute
+GtkWidget* muteBtn = gtk_button_new_from_icon_name("audio-volume-high-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
+gtk_widget_set_tooltip_text(muteBtn, "Mute / Unmute");
+g_object_set_data(G_OBJECT(window), "mute_button", muteBtn);
+
+
+// Metadata button
+GtkWidget *metadataBtn = gtk_button_new_from_icon_name("dialog-information", GTK_ICON_SIZE_SMALL_TOOLBAR);
+g_object_set_data(G_OBJECT(window), "metadata_button", metadataBtn);
+
+//light mode button
+GtkWidget *themeBtn = gtk_button_new_from_icon_name("night-light-symbolic", GTK_ICON_SIZE_BUTTON);
+g_object_set_data(G_OBJECT(window), "themeBtn", themeBtn);
+
+//sleep timer
+// Load and scale PNG image with GdkPixbuf
+GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file_at_scale("icons/clock.png",
+                                                      24,  // width
+                                                      24,  // height
+                                                      TRUE, // preserve aspect ratio
+                                                      NULL);
+
+GtkWidget *sleepImage = gtk_image_new_from_pixbuf(pixbuf);
+g_object_unref(pixbuf); // free pixbuf after setting image
+
+
+// Create button and set the image
+GtkWidget *sleepTimerBtn = gtk_button_new();
+gtk_button_set_image(GTK_BUTTON(sleepTimerBtn), sleepImage);
+gtk_button_set_always_show_image(GTK_BUTTON(sleepTimerBtn), TRUE);
+
+// Create label (initially hidden) to show timer state
+GtkWidget *sleepTimerLabel = gtk_label_new(NULL);
+gtk_widget_set_no_show_all(sleepTimerLabel, TRUE);
+// Store label in window so callbacks can update it
+g_object_set_data(G_OBJECT(window), "sleep_timer_label", sleepTimerLabel);
+
+
+GtkWidget *sleepTimerBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerBtn, FALSE, FALSE, 0);
+gtk_box_pack_start(GTK_BOX(sleepTimerBox), sleepTimerLabel, FALSE, FALSE, 0);
+
+//add to fav-list
+GtkWidget *FavButton = gtk_button_new_from_icon_name("star-new-symbolic", GTK_ICON_SIZE_SMALL_TOOLBAR);
+g_object_set_data(G_OBJECT(window), "fav_button", FavButton);
+
+/// --- VOLUME BUTTON + VERTICAL SLIDER POPUP ---
+// --- VOLUME BUTTON + VERTICAL SLIDER POPUP ---
+
+// Create the volume button (speaker icon)
+GtkWidget *volume_button = gtk_button_new_from_icon_name(
+    "audio-speakers", GTK_ICON_SIZE_BUTTON);
+gtk_widget_set_tooltip_text(volume_button, "Adjust Volume");
+
+// Create a popover attached to the volume button
+GtkWidget *volume_popover = gtk_popover_new(volume_button);
+gtk_popover_set_position(GTK_POPOVER(volume_popover), GTK_POS_TOP);
+
+// Create a vertical box inside the popover
+GtkWidget *vol_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+gtk_container_set_border_width(GTK_CONTAINER(vol_box), 5);
+
+// Create vertical slider (0–100)
+GtkAdjustment *vol_adj = gtk_adjustment_new(50, 0, 100, 1, 10, 0);
+GtkWidget *volume_slider = gtk_scale_new(GTK_ORIENTATION_VERTICAL, vol_adj);
+gtk_scale_set_draw_value(GTK_SCALE(volume_slider), FALSE);
+gtk_widget_set_size_request(volume_slider, 36, 150); // narrow but tall
+gtk_range_set_inverted(GTK_RANGE(volume_slider), TRUE);
+// Label showing numeric volume
+GtkWidget *vol_label = gtk_label_new("50");
+
+// Pack slider + label into box
+gtk_box_pack_start(GTK_BOX(vol_box), volume_slider, TRUE, TRUE, 0);
+gtk_box_pack_start(GTK_BOX(vol_box), vol_label, FALSE, FALSE, 0);
+
+// Add box to popover
+gtk_container_add(GTK_CONTAINER(volume_popover), vol_box);
+
+
+// Instead, only show contents but keep popover hidden
+gtk_widget_show_all(vol_box);
+gtk_widget_hide(volume_popover);   // hide popup initially
+
+// Update label when slider moves
+g_signal_connect(volume_slider, "value-changed",
+    G_CALLBACK(+[] (GtkRange *range, gpointer user_data) {
+        GtkLabel *lbl = GTK_LABEL(user_data);
+        int v = (int)gtk_range_get_value(range);
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", v);
+        gtk_label_set_text(lbl, buf);
+    }), vol_label);
+
+// Show/hide popover when volume button is clicked
+g_signal_connect(volume_button, "clicked",
+    G_CALLBACK(on_volume_button_clicked), volume_popover);
+
+
+
+//gtk_widget_set_size_request(ShowAudioFilesIcon, 50, 50);  // Set width and height to 50px
+
+        // Store the player_state::song_list in the window data=bcz we need to pass this player_state::song_list vector to another function
+        g_object_set_data(G_OBJECT(window), "player_state::song_list", &player_state::song_list);
+        g_print("Song list set with %zu songs\n", player_state::song_list.size());
+
+
+       g_signal_connect(ShowAudioFilesIcon, "clicked", G_CALLBACK(ShowAudioFilesList), window); // Connect the click signal
+      g_signal_connect(repeatBtn, "clicked", G_CALLBACK(on_repeat_clicked), window);
+     g_signal_connect(shuffleBtn, "clicked", G_CALLBACK(on_shuffle_clicked), NULL);
+        g_signal_connect(pauseIcon, "clicked", G_CALLBACK(toggle_pause), window);
+        g_signal_connect(seekBox, "value-changed", G_CALLBACK(on_seek_changed), window); //connect the seekbar
+        g_signal_connect(skip_forward,"clicked",G_CALLBACK(on_skip_forward_clicked),window); //connect the skip_forward button with its function
+        g_signal_connect(skip_backward,"clicked",G_CALLBACK(on_skip_backward_clicked),window); //connect the skip_backward button with its function
+       g_signal_connect(play_prev,"clicked",G_CALLBACK(on_play_prev_clicked),window); //connect playprev button with its function
+      g_signal_connect(play_next,"clicked",G_CALLBACK(on_play_next_clicked),window); //connect play_next button with its function
+       g_signal_connect(metadataBtn, "clicked", G_CALLBACK(on_metadata_clicked), window);
+    g_signal_connect(themeBtn, "clicked", G_CALLBACK(on_themeBtn_clicked), window);
+    g_signal_connect(sleepTimerBtn, "clicked", G_CALLBACK(on_sleep_timer_clicked), window);
+    
+    // Store pointer to Favourites in window data for callbacks
+    g_object_set_data(G_OBJECT(window), "favourites_ptr", &favourites);
+    
+    // Connect favourite button callback
+    g_signal_connect(FavButton, "clicked", G_CALLBACK(on_fav_button_clicked), window);
+g_signal_connect(muteBtn, "clicked", G_CALLBACK(on_mute_clicked), window);
+g_signal_connect(volume_slider, "value-changed",
+    G_CALLBACK(on_volume_slider_changed), nullptr);
+
+
+
+    // Add icon  to the features box
+    gtk_box_pack_start(GTK_BOX(features_box), ShowAudioFilesIcon, FALSE, FALSE, 0);  // Expand label
+    gtk_box_pack_start(GTK_BOX(features_box), repeatBtn, FALSE, FALSE, 0); 
+    gtk_box_pack_start(GTK_BOX(features_box), shuffleBtn, FALSE, FALSE, 2);
+
+    gtk_box_pack_start(GTK_BOX(features_box),play_prev,FALSE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(features_box),skip_backward,FALSE,FALSE,0);
+ gtk_box_pack_start(GTK_BOX(features_box), pauseIcon, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box),skip_forward,FALSE,FALSE,0);
+ gtk_box_pack_start(GTK_BOX(features_box),play_next,FALSE,FALSE,0);
+   gtk_box_pack_start(GTK_BOX(features_box), muteBtn, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box), metadataBtn, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box), themeBtn, FALSE, FALSE, 0);
+ //gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBtn, FALSE, FALSE, 0);
+ gtk_box_pack_start(GTK_BOX(features_box), sleepTimerBox, FALSE, FALSE, 0);
+ 
+ gtk_box_pack_start(GTK_BOX(features_box), FavButton, FALSE, FALSE, 0);
+
+
+gtk_box_pack_start(GTK_BOX(features_box), volume_button, FALSE, FALSE, 5);
+   
+   // Add label and button to the folder box
+   gtk_box_pack_start(GTK_BOX(folderBox), button, FALSE, FALSE, 0);  // Button takes minimal space
+    gtk_box_pack_start(GTK_BOX(folderBox), label, FALSE, FALSE, 5);  // Do NOT expand
+   
+
+
+  // Add the  folderbox,featurebox and second box  to the vbox (vertical box)
+    gtk_box_pack_start(GTK_BOX(vbox), folderBox, FALSE, FALSE, 0); // Add label to the top partition
+    gtk_box_pack_start(GTK_BOX(vbox), second_partition, TRUE, TRUE, 0); // Add empty second partition
+    gtk_box_pack_start(GTK_BOX(vbox), seek_hbox, FALSE, FALSE, 0);
+
+    gtk_box_pack_start(GTK_BOX(vbox), features_box, FALSE, FALSE, 0); // Add button to the bottom partition
+
+    // Add the vbox to the window
+    gtk_container_add(GTK_CONTAINER(window), vbox);
+
+
+    // Connect the window destroy signal to exit GTK when the window is closed
+    g_signal_connect(window, "destroy", G_CALLBACK(on_window_destroy), NULL);
+
+    // Show the window
+    gtk_widget_show_all(window);
+    
+    // Start updating seekbar and time labels every 0.5s
+g_timeout_add(500, (GSourceFunc)update_seek_position, window);
+    open_default_folder(window);
+
+    // Start the GTK main event loop
+    gtk_main();
+
+    return 0;
+}
+
