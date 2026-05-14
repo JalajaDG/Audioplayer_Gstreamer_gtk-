@@ -1,0 +1,32 @@
+# Build artifacts
+build/
+bin/
+tests/build/
+
+# Object files
+*.o
+*.a
+*.so
+
+# Compiled binaries
+ap
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Sanitizer/debug output
+*.log
+*.dSYM/
+
+# CMake build directories
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile.cmake
+install_manifest.txt
