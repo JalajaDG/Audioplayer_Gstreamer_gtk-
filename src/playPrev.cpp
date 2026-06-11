@@ -5,12 +5,13 @@
 #include "repeat.h"
 #include <string>
 #include <mutex>
+using namespace std;
 
 void on_play_prev_clicked(GtkWidget *widget, gpointer data) noexcept {
     (void)widget;
     GtkWidget *window = GTK_WIDGET(data);
 
-    std::lock_guard<std::mutex> lock(player_state::state_mutex);
+    lock_guard<mutex> lock(player_state::state_mutex);
 
     if (player_state::song_list.empty()) {
         g_print("Song list is empty. Nothing to play.\n");
@@ -40,8 +41,8 @@ void on_play_prev_clicked(GtkWidget *widget, gpointer data) noexcept {
     }
 
     player_state::current_song_index = next_index;
-    std::string filepath = player_state::folder_path + "/" + player_state::song_list[next_index];
-    std::string folder   = player_state::folder_path;
+    string filepath = player_state::folder_path + "/" + player_state::song_list[next_index];
+    string folder   = player_state::folder_path;
 
     g_print("Previous song: %s\n", filepath.c_str());
 

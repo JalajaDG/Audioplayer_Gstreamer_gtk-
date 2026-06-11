@@ -3,6 +3,7 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <iostream>
+using namespace std;
 
 void on_skip_forward_clicked(GtkWidget *widget, gpointer data) noexcept {
     (void)widget;
@@ -11,24 +12,24 @@ void on_skip_forward_clicked(GtkWidget *widget, gpointer data) noexcept {
     GstElement *pipeline = player.getPipeline();
 
     if (!pipeline) {
-        std::cout << "No active pipeline!\n";
+        cout << "No active pipeline!\n";
         return;
     }
 
     gint64 current = 0, duration = 0;
     if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &current)) {
-        std::cout << "Could not query current position!\n";
+        cout << "Could not query current position!\n";
         return;
     }
     if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration)) {
-        std::cout << "Could not query duration!\n";
+        cout << "Could not query duration!\n";
         return;
     }
 
     gint64 new_position = current + (10 * GST_SECOND);
     if (new_position > duration) new_position = duration;
 
-    std::cout << "Skipping forward 10s: "
+    cout << "Skipping forward 10s: "
               << (current / GST_SECOND) << "s -> "
               << (new_position / GST_SECOND) << "s\n";
 

@@ -10,6 +10,10 @@
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/video/videooverlay.h>
+#include "gst_utils.h"
+using namespace std;
+
+
 /**
  * @class PlayAudio
  * @brief Core audio player class implementing singleton pattern with modern C++
@@ -29,30 +33,31 @@ class PlayAudio
 {
 private:
     // Singleton instance using unique_ptr for automatic cleanup
-    static std::unique_ptr<PlayAudio> instance;
+    static unique_ptr<PlayAudio> instance;
+    //static PlayAudio* instance
     
     // === GStreamer pipeline elements ===
-    GstElement* pipeline{nullptr};           // Main pipeline (not managed via unique_ptr as it's unrefed in destructor)
-    GstElement* filesrc{nullptr};            // File source element
-    GstElement* decodebin{nullptr};          // Decoder element
-    GstElement* tee{nullptr};                // Tee element for splitting audio/video
+    GstElement* pipeline= nullptr;           // Main pipeline (not managed via unique_ptr as it's unrefed in destructor)
+    GstElement* filesrc= nullptr;            // File source element
+    GstElement* decodebin= nullptr;          // Decoder element
+    GstElement* tee= nullptr;                // Tee element for splitting audio/video
     
-    GstElement* queue_audio{nullptr};        // Audio queue
-    GstElement* audiobin{nullptr};           // Audio bin
-    GstElement* queue_visualizer{nullptr};   // Visualizer queue
-    GstElement* visualizer_bin{nullptr};     // Visualizer bin
+    GstElement* queue_audio= nullptr;        // Audio queue
+    GstElement* audiobin= nullptr;           // Audio bin
+    GstElement* queue_visualizer= nullptr;   // Visualizer queue
+    GstElement* visualizer_bin= nullptr;     // Visualizer bin
     
-    GstElement* videobin{nullptr};           // Video bin
-    GstElement* queue_video_sink{nullptr};   // Video sink queue
-    GstElement* videoconvert{nullptr};       // Video converter
-    GstElement* gtksink{nullptr};            // GTK sink for visualization
-    GstElement* goom{nullptr};               // Goom visualizer
-    GstElement* volume_element{nullptr};     // Volume control element
+    GstElement* videobin= nullptr;           // Video bin
+    GstElement* queue_video_sink= nullptr;   // Video sink queue
+    GstElement* videoconvert= nullptr;       // Video converter
+    GstElement* gtksink= nullptr;            // GTK sink for visualization
+    GstElement* goom= nullptr;               // Goom visualizer
+    GstElement* volume_element= nullptr;     // Volume control element
     
-    GstBus* bus{nullptr};                    // Message bus (not managed via unique_ptr)
-    GstMessage* msg{nullptr};                // Current message
+    GstBus* bus= nullptr;                    // Message bus (not managed via unique_ptr)
+    GstMessage* msg= nullptr;                // Current message
     
-    GtkWidget* main_window{nullptr};         // Reference to main GTK window (not owned)
+    GtkWidget* main_window= nullptr;         // Reference to main GTK window (not owned)
     
     // Private constructor for singleton pattern
     PlayAudio();
@@ -67,7 +72,7 @@ private:
     
     // Private destructor — friended so unique_ptr can call it
     ~PlayAudio();
-    friend std::default_delete<PlayAudio>;
+    friend default_delete<PlayAudio>;
 
 public:
     /**
@@ -86,7 +91,7 @@ public:
      * @brief Open folder and start playing first audio file
      * @param folder_path Path to the folder containing audio files
      */
-    void openFolderAndPlayFirstSong(std::string_view folder_path);
+    void openFolderAndPlayFirstSong(string_view folder_path);
     
     /**
      * @brief Get the GStreamer pipeline
@@ -100,7 +105,7 @@ public:
      * @param folder_path Path to the folder containing the file
      * @param window GTK window widget for displaying messages
      */
-    void play_audioFile(std::string_view file_path, std::string_view folder_path, GtkWidget* window);
+    void play_audioFile(string_view file_path, string_view folder_path, GtkWidget* window);
     
     /**
      * @brief Callback for GStreamer pad-added signal (dynamic pad linking)
@@ -140,7 +145,7 @@ public:
      * @brief Get the main GTK window reference
      * @return Pointer to main application window
      */
-    [[nodiscard]] GtkWidget* getMainWindow() const noexcept { return main_window; }
+     [[nodiscard]] GtkWidget* getMainWindow() const noexcept { return main_window; }
     
     /**
      * @brief Stop the audio playback pipeline
@@ -151,17 +156,17 @@ public:
      * @brief Get the volume control element
      * @return Pointer to GStreamer volume element (used for mute/unmute)
      */
-    [[nodiscard]] GstElement* getVolumeElement() noexcept { return volume_element; }
+     [[nodiscard]] GstElement* getVolumeElement() noexcept { return volume_element; }
     
     /**
      * @brief Get the Goom visualization element
      * @return Pointer to Goom visualizer element
      */
-    [[nodiscard]] GstElement* getGoomElement() noexcept { return goom; }
+     [[nodiscard]] GstElement* getGoomElement() noexcept { return goom; }
     
     /**
      * @brief Get the GTK sink for displaying visualizations
      * @return Pointer to GTK sink element
      */
-    [[nodiscard]] GstElement* getGtkSink() noexcept { return gtksink; }
+     [[nodiscard]] GstElement* getGtkSink() noexcept { return gtksink; }
 };

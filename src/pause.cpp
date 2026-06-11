@@ -1,43 +1,44 @@
 #include "pause.h"
 #include "PlayAudio.h"
+using namespace std;
 
 void toggle_pause(GtkWidget *widget, gpointer data) noexcept {
     (void)data;
-    std::cout << "Inside pause.cpp\n";
+    cout << "Inside pause.cpp\n";
 
     PlayAudio& player = PlayAudio::getInstance();
 
     GstElement *pipeline = player.getPipeline();
     if (!pipeline) {
-        std::cerr << "Error: Pipeline is null!" << std::endl;
+        cerr << "Error: Pipeline is null!" << endl;
         return;
     }
 
     GstState state;
     gst_element_get_state(pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
-    std::cout << "Current Pipeline State: " << state << std::endl;
+    cout << "Current Pipeline State: " << state << endl;
 
     if (state == GST_STATE_READY) {
-        std::cout << "Pipeline stuck in READY. Trying to start playback first..." << std::endl;
+        cout << "Pipeline stuck in READY. Trying to start playback first..." << endl;
         gst_element_set_state(pipeline, GST_STATE_PLAYING);
         gst_element_get_state(pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
-        std::cout << "State after trying to play: " << state << std::endl;
+        cout << "State after trying to play: " << state << endl;
     }
 
     if (state == GST_STATE_PLAYING) {
-        std::cout << "Pausing audio..." << std::endl;
+        cout << "Pausing audio..." << endl;
         gst_element_set_state(pipeline, GST_STATE_PAUSED);
         update_pause_icon(widget, false);
     } else if (state == GST_STATE_PAUSED) {
-        std::cout << "Resuming audio..." << std::endl;
+        cout << "Resuming audio..." << endl;
         gst_element_set_state(pipeline, GST_STATE_PLAYING);
         update_pause_icon(widget, true);
     } else {
-        std::cerr << "Pipeline is not in a valid state to pause or play!" << std::endl;
+        cerr << "Pipeline is not in a valid state to pause or play!" << endl;
     }
 
     gst_element_get_state(pipeline, &state, nullptr, GST_CLOCK_TIME_NONE);
-    std::cout << "State after request: " << state << std::endl;
+    cout << "State after request: " << state << endl;
 }
 
 void update_pause_icon(GtkWidget *pauseIcon, bool isPlaying) noexcept {

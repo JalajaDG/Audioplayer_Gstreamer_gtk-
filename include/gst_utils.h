@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <gst/gst.h>
+using namespace std;
 
 /**
  * @file gst_utils.h
@@ -17,7 +18,7 @@ namespace gst {
  * @brief Custom deleter for GStreamer objects
  * 
  * Automatically calls g_object_unref when the unique_ptr is destroyed.
- * Usage: std::unique_ptr<GstElement, gst::GstObjectDeleter> element(gst_element_factory_make(...));
+ * Usage: unique_ptr<GstElement, gst::GstObjectDeleter> element(gst_element_factory_make(...));
  */
 struct GstObjectDeleter {
     void operator()(gpointer ptr) const noexcept {
@@ -80,11 +81,11 @@ struct GstBusDeleter {
 };
 
 // Convenience type aliases for common GStreamer smart pointers
-using GstElementPtr = std::unique_ptr<GstElement, GstObjectDeleter>;
-using GstCapsPtr = std::unique_ptr<GstCaps, GstCapsDeleter>;
-using GstPadPtr = std::unique_ptr<GstPad, GstPadDeleter>;
-using GstMessagePtr = std::unique_ptr<GstMessage, GstMessageDeleter>;
-using GstBusPtr = std::unique_ptr<GstBus, GstBusDeleter>;
+using GstElementPtr = unique_ptr<GstElement, GstObjectDeleter>;
+using GstCapsPtr = unique_ptr<GstCaps, GstCapsDeleter>;
+using GstPadPtr = unique_ptr<GstPad, GstPadDeleter>;
+using GstMessagePtr = unique_ptr<GstMessage, GstMessageDeleter>;
+using GstBusPtr = unique_ptr<GstBus, GstBusDeleter>;
 
 /**
  * @brief Create a GStreamer element as a unique_ptr

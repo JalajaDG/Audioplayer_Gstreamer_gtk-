@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <string_view>
+using namespace std;
 
 /**
  * @class Favourites
@@ -27,16 +28,16 @@ public:
     
     /// @brief Add a song to favorites
     /// @param song Song path to add
-    void add(std::string_view song);
+    void add(string_view song);
     
     /// @brief Remove a song from favorites
     /// @param song Song path to remove
-    void remove(std::string_view song);
+    void remove(string_view song);
     
     /// @brief Check if a song is in favorites
     /// @param song Song path to check
     /// @return true if song is a favorite
-    [[nodiscard]] bool isFavourite(std::string_view song) const;
+    [[nodiscard]] bool isFavourite(string_view song) const;
     
     /// @brief Print favorite songs to console
     void printConsole() const;
@@ -49,11 +50,11 @@ public:
     
     /// @brief Get all favorite songs
     /// @return const reference to the favorites list
-    [[nodiscard]] const std::vector<std::string>& getFavourites() const noexcept {
+    [[nodiscard]] const vector<string>& getFavourites() const noexcept {
         return favouriteSongs;
     }
     
 private:
-    std::vector<std::string> favouriteSongs;
+    vector<string> favouriteSongs;
 };
 

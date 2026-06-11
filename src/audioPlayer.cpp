@@ -142,33 +142,31 @@ if (player.getGtkSink()) {
   
 }
 
-// --- Create a seek box (slider) ---
-GtkWidget *seekBox = gtk_scale_new_with_range(
-    GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0); // min=0, max=100, step=1
-gtk_scale_set_draw_value(GTK_SCALE(seekBox), FALSE); // Don't show numeric value
-gtk_widget_set_hexpand(seekBox, TRUE);               // Expand to fill width
-
-// Store seekBox in window for later use
-g_object_set_data(G_OBJECT(window), "seek_box", seekBox);
-
-
-
-
-// --- Create current time and total duration labels ---
-GtkWidget *current_time_label = gtk_label_new("00:00");
-GtkWidget *total_time_label = gtk_label_new("00:00");
-// Store labels in window for later use
-g_object_set_data(G_OBJECT(window), "current_time_label", current_time_label);
-g_object_set_data(G_OBJECT(window), "total_time_label", total_time_label);
-
-
-
-//seek_box(conatins current time,seekbar,total time)
+// Step 1 - Create the seek_hbox container
 GtkWidget *seek_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-// Add labels and seekbox to the horizontal box
-gtk_box_pack_start(GTK_BOX(seek_hbox), current_time_label, FALSE, FALSE, 5);
-gtk_box_pack_start(GTK_BOX(seek_hbox), seekBox, TRUE, TRUE, 5);
-gtk_box_pack_start(GTK_BOX(seek_hbox), total_time_label, FALSE, FALSE, 5);
+
+// Step 2 - Create current time label
+GtkWidget *current_time_label = gtk_label_new("00:00");
+
+// Step 3 - Create total duration label
+GtkWidget *total_time_label = gtk_label_new("00:00");
+
+// Step 4 - Create the slider (seekBox)
+GtkWidget *seekBox = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0);
+
+// Step 5 - Configure the slider
+gtk_scale_set_draw_value(GTK_SCALE(seekBox), FALSE); // hide numeric value on handle
+gtk_widget_set_hexpand(seekBox, TRUE);               // stretch to fill available width
+
+// Step 6 - Store all three in window data so callbacks can update them
+g_object_set_data(G_OBJECT(window), "current_time_label", current_time_label);
+g_object_set_data(G_OBJECT(window), "total_time_label",   total_time_label);
+g_object_set_data(G_OBJECT(window), "seek_box",           seekBox);
+
+// Step 7 - Pack all three into seek_hbox
+gtk_box_pack_start(GTK_BOX(seek_hbox), current_time_label, FALSE, FALSE, 5); // fixed left
+gtk_box_pack_start(GTK_BOX(seek_hbox), seekBox,            TRUE,  TRUE,  5); // expands middle
+gtk_box_pack_start(GTK_BOX(seek_hbox), total_time_label,   FALSE, FALSE, 5); // fixed right
 
 
 

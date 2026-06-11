@@ -6,6 +6,7 @@
 #include "pause.h"
 #include "favourite.h"
 #include <iostream>
+using namespace std;
 
 
 void on_row_activated(GtkWidget *widget, GtkListBoxRow *row, gpointer data) {
@@ -16,14 +17,14 @@ void on_row_activated(GtkWidget *widget, GtkListBoxRow *row, gpointer data) {
 
     // Get the index of the activated row
     int index = gtk_list_box_row_get_index(row);
-    std::cout << "Song index clicked: " << index << '\n';
-    std::string selected_song;
+    cout << "Song index clicked: " << index << '\n';
+    string selected_song;
 
     if (index >= 0 && index < static_cast<int>(player_state::song_list.size())) {
         selected_song = player_state::song_list[index];
-        std::cout << "Playing: " << selected_song << '\n';
-        std::cout << "Folder path: " << player_state::folder_path << '\n';
-        std::string Filepath = player_state::folder_path + "/" + selected_song;
+        cout << "Playing: " << selected_song << '\n';
+        cout << "Folder path: " << player_state::folder_path << '\n';
+        string Filepath = player_state::folder_path + "/" + selected_song;
 
         PlayAudio &player = PlayAudio::getInstance();
         player.play_audioFile(Filepath, player_state::folder_path, window);
@@ -36,9 +37,9 @@ void on_row_activated(GtkWidget *widget, GtkListBoxRow *row, gpointer data) {
     GtkWidget *song_label = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
     if (song_label) {
         gtk_label_set_text(GTK_LABEL(song_label), selected_song.c_str());
-        std::cout << "Now playing (from vector): " << selected_song << '\n';
+        cout << "Now playing (from vector): " << selected_song << '\n';
     } else {
-        std::cout << "⚠️ song_label not found in window!" << '\n';
+        cout << "⚠️ song_label not found in window!" << '\n';
     }
 
     // Close the dialog immediately
@@ -86,7 +87,7 @@ void ShowAudioFilesList(GtkWidget *widget, gpointer data) noexcept {
     g_signal_connect(list_box, "row-activated", G_CALLBACK(on_row_activated), pdata);
 
     // Add each audio file in the playlist to the list box
-    for (const std::string &song : player_state::song_list) {
+    for (const string &song : player_state::song_list) {
         GtkWidget *row_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
         GtkWidget *label = gtk_label_new(song.c_str());
         gtk_box_pack_start(GTK_BOX(row_box), label, TRUE, TRUE, 0);

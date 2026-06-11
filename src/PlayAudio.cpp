@@ -8,15 +8,51 @@
 #include "volume.h"
 #include <sys/stat.h>
 #include <utility>
+using namespace std;
+
+
+//     [filesrc] ──gst_element_link──► [decodebin]
+//                                       │
+//                               (pad-added signal,
+//                                dynamic at runtime)
+//                                       │
+//                                       ▼
+//                                    [tee]
+//                                   /     \
+//                (request pad src_0)       (request pad src_1)
+//                       │                         │
+//                       ▼                         ▼
+//                [queue_audio]          [queue_visualizer]
+//                       │                         │
+//                       ▼                         ▼
+//            ┌─── audiobin ───┐       ┌── visualizer_bin ──┐
+//            │  (ghost sink)  │       │    (ghost sink)     │
+//            │  audioconvert  │       │    audioconvert     │
+//            │  audioresample │       │    audioresample    │
+//            │    volume      │       │       goom          │
+//            │  autoaudiosink │       │    (ghost src)      │
+//            └────────────────┘       └────────┬───────────┘
+//                                              │
+//                                              ▼
+//                                    ┌──── videobin ────┐
+//                                    │   (ghost sink)   │
+//                                    │ queue_video_sink │
+//                                    │  videoconvert    │
+//                                    │    gtksink       │
+//                                    └──────────────────┘
 
 // Initialize singleton instance using Meyer's Singleton with unique_ptr
-std::unique_ptr<PlayAudio> PlayAudio::instance = nullptr;
+//static members must be defined outside the class
+unique_ptr<PlayAudio> PlayAudio::instance = nullptr;
+//PlayAudio* playAudio::instance=nullptr
 
 // Thread-safe singleton access method
 PlayAudio& PlayAudio::getInstance() {
     if (!instance) {
-        // Use new with std::make_unique equivalent pattern
-        instance = std::unique_ptr<PlayAudio>(new PlayAudio());
+        // Use new with make_unique equivalent pattern
+        instance = unique_ptr<PlayAudio>(new PlayAudio()); 
+        //using Unique_ptr instead of make_unique<PlayAudio>()..bcz. in make_unique constr  is called within std library,cant bcz constr is private.so
+
     }
     return *instance;
 }
@@ -294,7 +330,7 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
     }
 
     return TRUE; // Keep watching for messages
-}void PlayAudio::openFolderAndPlayFirstSong(std::string_view file_path)
+}void PlayAudio::openFolderAndPlayFirstSong(string_view file_path)
 {
     if (!pipeline) {
         g_printerr("Error: Pipeline is NULL\n");
@@ -314,7 +350,7 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
     g_print("Setting filesrc location to: %.*s\n", static_cast<int>(file_path.size()), file_path.data());
 
     // Set the file path to the filesrc element's location property
-    std::string path_str(file_path);
+    string path_str(file_path);
     g_object_set(filesrc, "location", path_str.c_str(), NULL);
 
 
@@ -334,7 +370,7 @@ gboolean PlayAudio::on_message(GstBus *bus, GstMessage *msg, gpointer user_data)
 }
 
 
-void PlayAudio::play_audioFile(std::string_view file_path, std::string_view folder_path, GtkWidget* window)
+void PlayAudio::play_audioFile(string_view file_path, string_view folder_path, GtkWidget* window)
 {
     PlayAudio& instance = PlayAudio::getInstance();
 
@@ -348,10 +384,10 @@ void PlayAudio::play_audioFile(std::string_view file_path, std::string_view fold
         return;
     }
 
-    std::cout << "Playing audio file: " << file_path << " from folder: " << folder_path << '\n';
+    cout << "Playing audio file: " << file_path << " from folder: " << folder_path << '\n';
 
     // Convert string_view to string for file operations
-    std::string file_path_str(file_path);
+    string file_path_str(file_path);
     
     // Validate file exists before attempting to play
     struct stat file_stat;
@@ -399,7 +435,7 @@ void PlayAudio::play_audioFile(std::string_view file_path, std::string_view fold
     
     // Extract filename from path
     size_t pos = file_path.find_last_of("/\\");
-    std::string filename(file_path.substr(pos != std::string::npos ? pos + 1 : 0));
+    string filename(file_path.substr(pos != string::npos ? pos + 1 : 0));
     
     GtkWidget* songLabel = GTK_WIDGET(g_object_get_data(G_OBJECT(window), "songLabel"));
     
@@ -488,7 +524,7 @@ void PlayAudio::stopPipeline() {
 // }
 
 void PlayAudio::handleEOS(GtkWidget* window) {
-    std::string next_file;
+    string next_file;
 
     if (player_state::repeat_mode) {
         // Repeat current song regardless of shuffle
