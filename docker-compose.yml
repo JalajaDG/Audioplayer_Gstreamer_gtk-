@@ -1,0 +1,13 @@
+services:
+  audioplayer:
+    build:
+      context: .
+      target: runtime
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ${HOME}/Music:/music:ro
+    network_mode: host
+    stdin_open: true
+    tty: true
